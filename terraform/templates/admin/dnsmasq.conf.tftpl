@@ -1,0 +1,45 @@
+# Listen only on the internal interfaces
+%{ for idx, iface in admin_interfaces ~}
+interface=eth${idx + 1}
+%{ endfor ~}
+bind-interfaces
+
+log-dhcp
+log-facility=/var/log/dnsmasq.log
+log-debug
+
+enable-tftp
+tftp-root=/tftpboot
+#tftp-unique-root=ip
+#dhcp-boot=default
+
+dhcp-userclass=set:is_ipxe,iPXE
+dhcp-match=set:is_efi,option:client-arch,7
+dhcp-match=set:is_efi,option:client-arch,8
+dhcp-match=set:is_efi,option:client-arch,9
+
+dhcp-boot=tag:is_ipxe,"http://${admin_ip}/$${net0/ip}"
+dhcp-boot=tag:is_efi,tag:!is_ipxe,"ipxe.efi"
+dhcp-boot=tag:!is_efi,tag:!is_ipxe,"ipxe/undionly.kpxe"
+
+# DHCP pool for eth1 (10.8.0.0/24)
+dhcp-range=10.8.0.100,10.8.0.200,255.255.255.0,12h
+# DHCP pool for eth2 (10.9.0.0/24)
+dhcp-range=10.9.0.100,10.9.0.200,255.255.255.0,12h
+
+# Static DHCP reservations for nodes
+
+%{~ for idx, node in nodes ~}
+dhcp-host=${node.interfaces[0].mac},${node.ip},node${idx},12h
+%{ endfor ~}
+
+# VIP
+%{ if vip_mode == "dhcp" ~}
+dhcp-host=${vip_mac},${vip},hvst-vip,12h
+%{ endif ~}
+
+dhcp-option=6,${join(",", dns_servers)}
+
+no-hosts
+log-queries
+log-dhcp

@@ -1,0 +1,8 @@
+version: 2
+ethernets:
+  eth0:
+    dhcp4: true
+%{ for idx, iface in admin_interfaces ~}
+  eth${idx + 1}:
+    addresses: [${iface.ip}]
+%{ endfor ~}

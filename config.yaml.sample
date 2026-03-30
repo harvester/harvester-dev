@@ -1,0 +1,197 @@
+harvester_release_url: https://releases.rancher.com/harvester
+artifact_server_url: http://10.8.0.101:8787
+harvester_version: harvester-v1.7.1
+harvester_iso_url: http://10.8.0.101:8787/isos/harvester-v1.7.1/harvester-v1.7.1-amd64.iso
+harvester_kernel_url: http://10.8.0.101:8787/isos/harvester-v1.7.1/harvester-v1.7.1-vmlinuz-amd64
+harvester_ramdisk_url: http://10.8.0.101:8787/isos/harvester-v1.7.1/harvester-v1.7.1-initrd-amd64
+harvester_rootfs_url: http://10.8.0.101:8787/isos/harvester-v1.7.1/harvester-v1.7.1-rootfs-amd64.squashfs
+provider:
+  libvirt:
+    # uri: qemu:///system
+    uri: "qemu:///system?socket=/var/run/libvirt/virtqemud-sock"
+  domain_prefix: hvst
+token: my-token
+vip: 10.8.0.100
+vip_mac: 52:54:00:12:34:56
+vip_mode: dhcp
+admin:
+  image_url: "/home/harvester/harvester-dev/artifacts/images/alpine-admin.img"
+  image_vol_size: 20
+  cpu: 1
+  memory_in_mib: 256
+  private_key_path: state/keys/id_rsa
+  pubkey_path: state/keys/id_rsa.pub
+  dhcp:
+    dns_servers:
+      - 8.8.8.8
+  interfaces:
+    - ip: 10.8.0.10/24
+      bridge: br8
+    - ip: 10.9.0.10/24
+      bridge: br9
+rancher:
+  image_url: "/home/harvester/harvester-dev/artifacts/images/debian-13-generic-amd64.qcow2"
+  image_vol_size: 50
+  cpu: 4
+  memory_in_mib: 8192
+  interfaces:
+    - ip: 10.8.0.5/24
+      bridge: br8
+  # Provisioning configuration
+  k3s_version: v1.35.3+k3s1
+  repo: https://releases.rancher.com/server-charts/latest
+  version: v2.14.0
+  bootstrap_password: password
+  admin_password: "password1234"
+  hostname: rancher.10.8.0.5.sslip.io
+node_installed_timeout: 20
+node_password: rancher
+node_additional_keys: []
+node_count: 4
+node_disk_owner: qemu
+node_disk_group: qemu
+node_snapshot_after_provision: false
+nodes:
+  - ip: 10.8.0.11
+    cpu: 8
+    memory: 24
+    interfaces:
+      - mac: 52:54:00:6a:59:7c
+        host_bridge: br8
+      - mac: 52:54:00:01:9b:5b
+        host_bridge: br9
+    disk_size: 500G
+    mgmt_interface: enp1s0
+    role: default
+    vnc_port: 5951
+  - ip: 10.8.0.12
+    cpu: 8
+    memory: 16
+    interfaces:
+      - mac: 52:54:00:55:1e:0c
+        host_bridge: br8
+      - mac: 52:54:00:b9:a8:bf
+        host_bridge: br9
+    disk_size: 500G
+    mgmt_interface: enp1s0
+    role: default
+    vnc_port: 5952
+  - ip: 10.8.0.13
+    cpu: 8
+    memory: 16
+    interfaces:
+      - mac: 52:54:00:cf:c9:aa
+        host_bridge: br8
+      - mac: 52:54:00:17:13:53
+        host_bridge: br9
+    disk_size: 500G
+    mgmt_interface: enp1s0
+    role: default
+    vnc_port: 5953
+  - ip: 10.8.0.14
+    cpu: 8
+    memory: 16
+    interfaces:
+      - mac: 52:54:00:84:ef:b9
+        host_bridge: br8
+      - mac: 52:54:00:44:d9:e1
+        host_bridge: br9
+    disk_size: 500G
+    mgmt_interface: enp1s0
+    role: default
+    vnc_port: 5954
+harvester:
+  name: harvester-dev
+  admin_password: password1234
+  # namespace to provisiong VMs, networks, and images, etc.
+  namespace: default
+  vms:
+    ubuntu:
+      count: 0
+      cpu: 1
+      memory_in_mib: 512
+      disk_size: 20
+      image_url: http://cloud-images.ubuntu.com/noble/20260323/noble-server-cloudimg-amd64.img
+    opensuse:
+      count: 0
+      cpu: 1
+      memory_in_mib: 512
+      disk_size: 20
+      image_url: https://download.opensuse.org/repositories/Cloud:/Images:/Leap_15.6/images/openSUSE-Leap-15.6.x86_64-NoCloud.qcow2
+  private_key_path: state/keys/id_rsa
+  pubkey_path: state/keys/id_rsa.pub
+  cluster_network:
+    name: cluster-vlan
+    uplink: enp2s0
+  vm_network:
+    vlan_id: 1
+guest_clusters:
+  - name: gc-ubuntu
+    enabled: true
+    namespace: default
+    kubernetes_version: v1.33.9+rke2r1
+    node_count: 1
+    cpu: 4
+    memory_in_gib: 4
+    image_name: ubuntu
+    ssh_user: ubuntu
+    network: hvst-dev-vlan
+    disk_size: 50
+    user_data: |-
+      password: a
+      chpasswd: { expire: False }
+      ssh_pwauth: True
+      package_update: true
+      packages:
+        - qemu-guest-agent
+      apt:
+        disable_suites: [backports, security]
+        primary:
+          - arches: [ amd64, i386, default ]
+            uri: https://free.nchc.org.tw/ubuntu
+      runcmd:
+        - - systemctl
+          - enable
+          - '--now'
+          - qemu-guest-agent.service
+  - name: gc-opensuse
+    enabled: false
+    namespace: default
+    kubernetes_version: v1.33.9+rke2r1
+    node_count: 1
+    cpu: 4
+    memory_in_gib: 4
+    image_name: opensuse
+    ssh_user: opensuse
+    network: hvst-dev-vlan
+    disk_size: 50
+    user_data: |-
+      password: a
+      chpasswd: { expire: False }
+      ssh_pwauth: True
+      package_update: true
+      packages:
+        - qemu-guest-agent
+      runcmd:
+        - - systemctl
+          - enable
+          - '--now'
+          - qemu-guest-agent.service
+tests:
+  upgrade:
+    parallel_preload: true
+    iso_url: http://10.8.0.101/harvester/harvester.iso
+iso_boot:
+  file: /path/to/install.iso
+  count: 0
+  cpu: 8
+  vnc_port_start: 5961
+  memory: 16
+  # Disks, you can change sizes here
+  disks:
+    - 500G
+    - 500G
+  # Interfaces, specify the bridge that the interface(s) will connect to. MAC address will be generated automatically by libvirt
+  interfaces:
+    - host_bridge: br8
+    - host_bridge: br9

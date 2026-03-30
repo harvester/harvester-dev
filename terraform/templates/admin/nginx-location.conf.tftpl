@@ -1,0 +1,13 @@
+server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+
+        autoindex on;
+        root /www;
+
+        location / {
+                # This will now look for a file, and if it's a directory,
+                # it will show the index list because autoindex is ON.
+                try_files $uri $uri/ =404;
+        }
+}

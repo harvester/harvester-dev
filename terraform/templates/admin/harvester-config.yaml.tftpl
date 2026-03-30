@@ -1,0 +1,50 @@
+scheme_version: 1
+%{ if mode == "create" ~}
+token: '${token}'
+%{ else ~}
+server_url: https://${vip}:443
+token: '${token}'
+%{ endif ~}
+os:
+%{ if mode == "join" ~}
+  sshd:
+    sftp: true
+%{ endif ~}
+  hostname: ${hostname}
+  ssh_authorized_keys:
+%{ for key in ssh_keys ~}
+    - ${key}
+%{ endfor ~}
+  password: ${password}
+%{ if mode == "create" ~}
+  sshd:
+    sftp: true
+%{ endif ~}
+install:
+  wipe_all_disks: true
+  mode: ${mode}
+  management_interface:
+    interfaces:
+      - hwAddr: ${hwaddr}
+    default_route: true
+    method: dhcp
+    bond_options:
+      mode: balance-tlb
+      miimon: 100
+  device: /dev/vda
+  iso_url: ${iso_url}
+  poweroff: true
+%{ if mode == "create" ~}
+  vip: ${vip}
+  vip_mode: ${vip_mode}
+%{   if vip_mode == "dhcp" ~}
+  vip_hw_addr: ${vip_mac}
+%{   endif ~}
+  skipchecks: true
+  role: ${role}
+systemSettings:
+  log-level: debug
+  upgrade-checker-enabled: "false"
+%{ else ~}
+  skipchecks: true
+%{ endif ~}

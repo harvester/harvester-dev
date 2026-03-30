@@ -1,0 +1,8 @@
+#cloud-config
+password: "${vm_password}"
+ssh_pwauth: true
+chpasswd:
+  expire: false
+
+ssh_authorized_keys:
+  - ${ssh_pubkey}

@@ -1,0 +1,10 @@
+.terraform*
+terraform.tfstate*
+
+/artifacts/isos
+/artifacts/images
+/backup
+/state
+/images
+/kubeconfig
+

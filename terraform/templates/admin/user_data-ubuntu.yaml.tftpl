@@ -1,0 +1,29 @@
+#cloud-config
+password: "${vm_password}"
+ssh_pwauth: true
+chpasswd:
+  expire: false
+
+write_files:
+  - path: /etc/dnsmasq.d/harvester.conf
+    owner: root:root
+    permissions: "0644"
+    content: |
+      # Listen only on the internal interfaces
+      interface=eth1
+      interface=eth2
+      bind-interfaces
+
+      # DHCP pool for eth1 (10.8.0.0/24)
+      dhcp-range=10.8.0.100,10.8.0.200,255.255.255.0,12h
+      # DHCP pool for eth2 (10.9.0.0/24)
+      dhcp-range=10.9.0.100,10.9.0.200,255.255.255.0,12h
+
+      no-hosts
+      log-queries
+      log-dhcp
+
+runcmd:
+  - apt-get update
+  # - apt-get install -y qemu-guest-agent
+  # - systemctl enable --now qemu-guest-agent

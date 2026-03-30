@@ -1,0 +1,247 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+# Operations Taskfile for Dev Infra
+version: '3'
+
+# variables passed from the root Taskfile
+# TF_DIR: terraform dir
+# STATE_DIR: state dir
+
+tasks:
+# Admin VM related tasks
+  admin-wait:
+    cmds:
+      - ./admin/wait-ssh.sh
+      - ./admin/wait-cloudinit.sh
+  admin-poweron:
+    desc: Power on the admin VM
+    cmds:
+      - ./admin/poweron.sh
+  admin-enable-egress:
+    desc: Masquate node IPs when accessing external network.
+    cmds:
+      - ./admin/set-node-egress.sh 1
+  admin-disable-egress:
+    desc: Disable masquerading of node IPs when accessing external network.
+    cmds:
+      - ./admin/set-node-egress.sh 0
+
+# Rancher VM related tasks
+  rancher-poweron:
+    desc: Power on the Rancher VM
+    cmds:
+      - ./rancher/power.sh on
+  rancher-poweroff:
+    desc: Power off the Rancher VM
+    cmds:
+      - ./rancher/power.sh off
+  rancher-wait:
+    cmds:
+      - ./rancher/wait-ssh.sh
+      - ./rancher/wait-cloudinit.sh
+  rancher-install:
+    desc: Install Rancher server VM and wait for it to be ready
+    cmds:
+      - task: rancher-poweron
+      - task: rancher-wait
+      - ./rancher/provision.sh
+  rancher-up:
+    desc: Install Rancher server and bootstrap Rancher Manager
+    cmds:
+      - task: rancher-install
+      - task: rancher-bootstrap
+  rancher-reinstall:
+    desc: Reset the Rancher VM to initial state and provisiong a new Rancher Manager
+    cmds:
+      - ./rancher/destroy.sh
+      - terraform -chdir={{.TF_DIR}} apply --auto-approve -replace 'libvirt_domain.harvester-dev-rancher[0]' -replace 'libvirt_volume.rancher_disk'
+      - task: rancher-clean-state
+      - task: rancher-install
+  rancher-re-up:
+    desc: Re-install Rancher server and re-bootstrap Rancher Manager. This is useful when you want to reset the Rancher server but keep the VM.
+    cmds:
+      - task: rancher-reinstall
+      - task: rancher-bootstrap
+  rancher-ssh:
+    desc: SSH into the rancher VM
+    cmds:
+      - ssh -F ../state/ssh_config rancher
+  rancher-bootstrap-init:
+    desc: Init terraform for bootstrapping a Rancher server
+    cmds:
+      - terraform -chdir=rancher/bootstrap init
+      - terraform -chdir=rancher/bootstrap-post init
+      - touch {{.STATE_DIR}}/rancher_bootstrap_tf_initialized
+    status:
+      - test -f {{.STATE_DIR}}/rancher_bootstrap_tf_initialized
+  rancher-bootstrap:
+    desc: Bootstrap a Rancher server and change admin password and get admin token
+    deps: [rancher-bootstrap-init]
+    cmds:
+      - ./rancher/bootstrap.sh
+      - touch {{.STATE_DIR}}/rancher_bootstrapped
+    status:
+      - test -f {{.STATE_DIR}}/rancher_bootstrapped
+  rancher-clean-state:
+    desc: Clean up state files related to Rancher bootstrap
+    cmds:
+      - rm -f rancher/bootstrap/terraform.tfstate rancher/bootstrap/terraform.tfstate.backup rancher/bootstrap/.terraform.lock.hcl
+      - rm -f rancher/bootstrap-post/terraform.tfstate rancher/bootstrap-post/terraform.tfstate.backup rancher/bootstrap-post/.terraform.lock.hcl
+      - rm -f {{.STATE_DIR}}/rancher_bootstrap_tf_initialized
+      - rm -f {{.STATE_DIR}}/rancher_bootstrapped
+      - rm -f {{.STATE_DIR}}/rancher_bootstrap_credentials.yaml
+      - rm -f {{.STATE_DIR}}/rancher_bootstrap_kubeconfig
+
+# VM Nodes related tasks (VMs that supposed to boot from iPXE to do the installation)
+  nodes-start:
+    desc: Power on all nodes
+    cmds:
+      - ./nodes/libvirt-domain-op.sh start
+  nodes-first-boot:
+    desc: Power on all nodes and wait for them to be installed and shut down
+    cmds:
+      - task: nodes-start
+      - ./nodes/wait-installed.sh
+      # Create a snapshot after the installation if node_snapshot_after_provision is true in config.yaml.
+      # The clusters is not bootstrapped yet at this moment and it will be convenient to revert to this snapshot if needed.
+      - task: nodes-snapshot-if-configured
+      - touch {{.STATE_DIR}}/nodes_installed
+    status:
+      - test -f {{.STATE_DIR}}/nodes_installed
+  nodes-install:
+    desc: Power on all nodes and wait for the Harvester cluster to be ready
+    cmds:
+      - task: nodes-first-boot
+      - task: nodes-start
+      - ./nodes/wait-vip.sh
+      - task: nodes-rke2-env
+      - task: test-cluster-ready
+      - task: harvester-change-default-password
+  nodes-reinstall:
+    desc: Reset node disks and re-install Harvester on all nodes again
+    cmds:
+      - ./confirm-op.sh
+      - task: nodes-destroy
+      - task: nodes-clean-state
+      - ./nodes/reset-disks.sh
+      - task: harvester-clean-state
+      - task: nodes-install
+  nodes-rke2-env:
+    desc: Download /etc/rancher/rke2/rke2.yaml from the first node and save it to `kubeconfig` in the project root
+    cmds:
+      - ./nodes/rke2-env.sh 
+  nodes-clean-state:
+    desc: Clean up state files related to nodes
+    cmds:
+      - task: nodes-snapshot-clean
+      - rm -f {{.STATE_DIR}}/nodes_installed
+      - rm -f {{.STATE_DIR}}/cluster_config.yaml
+  nodes-destroy:
+    desc: Destroy all node domains in libvirt
+    cmds:
+      - ./nodes/libvirt-domain-op.sh destroy
+  nodes-poweroff:
+    desc: Power off all node domains in libvirt
+    cmds:
+      - ./nodes/libvirt-domain-op.sh shutdown
+  nodes-snapshot:
+    desc: Take snapshots of all node domains in libvirt
+    cmds:
+      - ./nodes/libvirt-domain-op.sh snapshot saved
+  nodes-snapshot-if-configured:
+    vars:
+      SNAPSHOT_ENABLED:
+        sh: yq '.node_snapshot_after_provision' ../config.yaml
+    if: '{{eq .SNAPSHOT_ENABLED "true"}}'
+    cmds:
+      - task: nodes-snapshot
+  nodes-snapshot-list:
+    desc: List snapshots of all node domains in libvirt
+    cmds:
+      - ./nodes/libvirt-domain-op.sh snapshot-list
+  nodes-snapshot-revert:
+    desc: Apply snapshots of all node domains in libvirt
+    cmds:
+      - ./nodes/libvirt-domain-op.sh snapshot-revert saved
+  nodes-snapshot-clean:
+    desc: Delete snapshots of all node domains in libvirt
+    cmds:
+      - ./nodes/libvirt-domain-op.sh snapshot-clean
+  nodes-revert-to-installed:
+    desc: Revert all nodes to the snapshot taken right after installation
+    cmds:
+      - task: nodes-destroy
+      - task: nodes-snapshot-revert
+      - task: nodes-install
+
+# ISO boot nodes (VMs that supposed to boot from ISO to do the installation)
+  iso-boot-nodes-start:
+    desc: Power on all ISO nodes
+    cmds:
+      - ./iso-nodes/libvirt-domain-op.sh start
+  iso-boot-nodes-shutdown:
+    desc: Shutdown all ISO nodes domains in libvirt
+    cmds:
+      - ./iso-nodes/libvirt-domain-op.sh shutdown
+  iso-boot-nodes-destroy:
+    desc: Destroy all ISO nodes domains in libvirt
+    cmds:
+      - ./iso-nodes/libvirt-domain-op.sh destroy
+
+# Harvester related tasks
+  harvester-init-tf:
+    desc: Init terraform for harvester related resources
+    cmds:
+      - terraform -chdir=harvester/bootstrap init
+      - touch {{.STATE_DIR}}/harvester_tf_initialized
+    status:
+      - test -f {{.STATE_DIR}}/harvester_tf_initialized
+  harvester-change-default-password:
+    desc: Change the default admin password of the Harvester cluster
+    cmds:
+      - ./harvester/change-default-password.sh
+      - touch {{.STATE_DIR}}/harvester_changed_default_password
+    status:
+      - test -f {{.STATE_DIR}}/harvester_changed_default_password
+  harvester-bootstrap:
+    desc: Create Networks, VirtualMachineImages, and VirtualMachines
+    deps: [harvester-init-tf]
+    env:
+      KUBECONFIG: "{{.ROOT_DIR}}/kubeconfig"
+    cmds:
+      - terraform -chdir=harvester/bootstrap apply --auto-approve
+  harvester-unbootstrap:
+    deps: [harvester-init-tf]
+    desc: Remove Networks, VirtualMachineImages, and VirtualMachines
+    cmds:
+      - terraform -chdir=harvester/bootstrap destroy
+  harvester-clean-state:
+    desc: Clean up harvester related states
+    cmds:
+      - rm -f harvester/bootstrap/terraform.tfstate harvester/bootstrap/terraform.tfstate.backup harvester/bootstrap/terraform.tfstate.lock.hcl
+      - rm -f {{.STATE_DIR}}/harvester_tf_initialized
+      - rm -f {{.STATE_DIR}}/harvester_changed_default_password
+  harvester-import:
+    desc: Import Harvester cluster to Rancher Manager
+    cmds:
+      # - task: harvester-bootstrap
+      - ./harvester/import-to-rancher.sh
+  harvester-create-guest-clusters:
+    desc: Create guest clusters on Harvester
+    cmds:
+      # - task: harvester-import
+      - ./harvester/create-guest-clusters.sh
+  harvester-delete-guest-clusters:
+    desc: Delete guest clusters on Harvester
+    cmds:
+      - ./harvester/delete-guest-clusters.sh
+
+# tests
+  test-cluster-ready:
+    desc: Verify the Harvester cluster is ready
+    cmds:
+      - ./tests/smoke-test-cluster-ready.sh
+  test-cluster-upgrade:
+    desc: Verify the Harvester cluster can be upgraded successfully
+    cmds:
+      - ./tests/smoke-test-upgrade.sh
+

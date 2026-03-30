@@ -1,0 +1,64 @@
+#cloud-config
+password: "${vm_password}"
+ssh_pwauth: true
+chpasswd:
+  expire: false
+
+ssh_authorized_keys:
+  - ${ssh_pubkey}
+
+write_files:
+  - path: /etc/sysctl.d/local.conf
+    owner: root:root
+    permissions: "0644"
+    content: |
+      net.ipv4.ip_forward=1
+  - path: /etc/dnsmasq.d/harvester.conf
+    owner: root:root
+    permissions: "0644"
+    content: |
+      ${replace(dnsmasq_config, "\n", "\n      ")}
+  - path: /etc/nginx/http.d/harvester.conf
+    owner: root:root
+    permissions: "0644"
+    content: |
+      ${replace(nginx_config, "\n", "\n      ")}
+%{ for idx, node in nodes ~}
+  - path: /www/${node.ip}
+    owner: root:root
+    permissions: "0644"
+    content: |
+      #!ipxe
+      kernel ${config.harvester_kernel_url}
+      initrd ${config.harvester_ramdisk_url}
+      
+      imgargs ${reverse(split("/", config.harvester_kernel_url))[0]} initrd=${reverse(split("/", config.harvester_ramdisk_url))[0]} ip=${node.mgmt_interface}:dhcp rd.cos.disable rd.live.debug=1 root=live:${config.harvester_rootfs_url} console=tty1 console=ttyS0 harvester.install.automatic=true harvester.install.config_url=http://${admin_ip}/${node.name}.yaml net.ifnames=1 harvester.install.skipchecks=true harvester.install.wipe_disks=true
+      
+      boot
+%{ endfor ~}
+%{ for idx, node in nodes ~}
+  - path: /www/${node.name}.yaml
+    owner: root:root
+    permissions: "0644"
+    content: |
+      ${replace(harvester_node_configs[node.name], "\n", "\n      ")}
+%{ endfor ~}
+
+bootcmd:
+  - rc-update del chronyd || true
+
+runcmd:
+  # cloud-init runcmd already executes as root; no doas prefix needed
+  # NOTE: If you are using image from https://github.com/bk201/alpine-cloud-images
+  #       There is no need to add packages/artifacts as they are included already.
+  #       This ensures everything still works in air-gap envs.
+  # - apk update
+  # - apk add --no-cache iptables dnsmasq tcpdump nginx sudo
+  # - apk add vim qemu-guest-agent-openrc
+  # - mkdir -p /tftpboot /www
+  # - wget https://boot.ipxe.org/x86_64-efi/ipxe.efi -O /tftpboot/ipxe.efi
+  - rc-update add dnsmasq default && rc-service dnsmasq start
+  - rm -f /etc/nginx/http.d/default.conf
+  - rc-update add nginx default && rc-service nginx start
+  # - rc-update add qemu-guest-agent default
+  # - rc-service qemu-guest-agent start

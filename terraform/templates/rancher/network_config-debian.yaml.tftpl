@@ -1,0 +1,8 @@
+version: 2
+ethernets:
+  enp1s0:
+    dhcp4: true
+%{ for idx, iface in vm_interfaces ~}
+  enp${idx + 2}s0:
+    addresses: [${iface.ip}]
+%{ endfor ~}

@@ -1,0 +1,124 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: '3'
+
+vars:
+  TF_DIR: "{{.ROOT_DIR}}/terraform"
+  CONFIG_FILE: "{{.ROOT_DIR}}/config.yaml"
+  STATE_DIR: "{{.ROOT_DIR}}/state"
+
+includes:
+  op:
+    taskfile: ./op/Taskfile.yml
+    dir: ./op
+    vars:
+      TF_DIR: "{{.TF_DIR}}"
+      STATE_DIR: "{{.STATE_DIR}}"
+
+tasks:
+  default:
+    cmds:
+      - task --list
+    silent: true
+  artifacts-up:
+    desc: Build and run the artifacts server container
+    cmds:
+      - ./artifacts/run-server.sh
+  select-install-iso:
+    desc: Select an ISO and update config file
+    cmds:
+      - ./artifacts/select-install-iso.sh
+  select-upgrade-iso:
+    desc: Select an ISO and update config file
+    cmds:
+      - ./artifacts/select-upgrade-iso.sh
+  init_tf:
+    desc: Initialize Terraform and download provider plugins
+    cmds:
+      - terraform -chdir={{.TF_DIR}} init
+    status:
+      - test -f {{.TF_DIR}}/.terraform.lock.hcl
+  init_keys:
+    desc: Generate shared SSH key pairs if they don't already exist
+    cmds:
+      - mkdir -p state/keys
+      - test -f state/keys/id_rsa || ssh-keygen -t rsa -b 4096 -f state/keys/id_rsa -N ""
+    status:
+      - test -f state/keys/id_rsa
+  init:
+    deps: [init_tf, init_keys]
+  config-check:
+    desc: Validate config.yaml for duplicate ip, mac, and vnc_port in nodes
+    cmds:
+      - python3 scripts/validate-config.py {{.CONFIG_FILE}}
+  check:
+    desc: Run all checks
+    deps: [config-check]
+  plan:
+    desc: Plan the terraform deployment
+    deps: [init]
+    cmds:
+      - terraform -chdir={{.TF_DIR}} plan
+  build:
+    desc: Build the Dev Infra
+    deps: [init, check]
+    cmds:
+      - terraform -chdir={{.TF_DIR}} apply --auto-approve
+  admin-up:
+    desc: Power on admin node and wait for it to be ready
+    cmds:
+      - task: build
+      - task: op:admin-poweron
+      - task: op:admin-wait
+  up:
+    desc: Build base dev infra and install Harvester on nodes
+    deps: [admin-up]
+    cmds:
+      - task: op:nodes-install
+  rancher-install:
+    desc: Bring up the Rancher VM and wait for it to be ready
+    deps: [init]
+    cmds:
+      - task: op:rancher-install
+  rancher-reinstall:
+    desc: Reset the Rancher VM to initial state and provisiong a new Rancher Manager
+    deps: [init]
+    cmds:
+      - task: op:rancher-reinstall
+  nodes-install:
+    desc: Power on all nodes and wait for Harvester cluster to be ready
+    deps: [init]
+    cmds:
+      - task: op:nodes-install
+  nodes-reinstall:
+    desc: Reset node disks and re-install Harvester on all nodes again
+    deps: [init]
+    cmds:
+      - task: op:nodes-reinstall
+  clean:
+    desc: Tear down the Dev Infra and clean up resources
+    cmds:
+      - echo "This will clean state files, destroy VMs, and tear down the terraform infra" && ./op/confirm-op.sh {{.CLI_ARGS}}
+      - task: op:rancher-clean-state
+      - task: op:nodes-destroy
+      - task: op:nodes-clean-state
+      - terraform -chdir={{.TF_DIR}} destroy --auto-approve
+#      - rm -rf {{.STATE_DIR}}/keys
+      - rm -f {{.STATE_DIR}}/ssh_config
+      - rm -f kubeconfig
+      - task: op:harvester-clean-state
+  reset:
+    cmds:
+      - task clean
+      - task build
+  ssh:
+    desc: SSH into VMs using generated SSH config. By default, it will ssh into admin node. Use `-- NODE` to specify a node, e.g. `task ssh -- node1`
+    cmds:
+      - ssh -F {{.ROOT_DIR}}/state/ssh_config {{if .CLI_ARGS}}{{.CLI_ARGS}}{{else}}admin{{end}}
+
+
+# tmp
+
+  patch-upgrade-image:
+    desc: Patch the upgrade image
+    cmds:
+      - ./op/nodes/mock-image.sh rancher/harvester-upgrade:dev rancher/harvester-upgrade:v1.8.0-rc5
