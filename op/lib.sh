@@ -2,6 +2,171 @@
 
 # Common library for wait scripts
 
+## golden images related
+
+log() { printf '%s [%s] %s\n' "$(date +'%F %T')" "${SCRIPT_NAME:-?}" "$*"; }
+err() { log "ERROR: $*" >&2; }
+die() { err "$*"; exit 1; }
+
+require_cmd() {
+  local c
+  for c in "$@"; do
+    command -v "$c" >/dev/null 2>&1 || die "required command not found: $c"
+  done
+}
+
+domain_exists() { "$VIRSH" dominfo "$1" >/dev/null 2>&1; }
+domain_state()  { "$VIRSH" domstate "$1" 2>/dev/null; }
+
+# Emit "<target> <abs-source-path>" for every *disk* device (skips cdrom/empty).
+# Parses domain XML so it handles all source kinds:
+#   file   -> <source file='/path'/>            (used as-is)
+#   block  -> <source dev='/dev/...'/>           (used as-is)
+#   volume -> <source pool='p' volume='v'/>      (resolved via `virsh vol-path`)
+domain_disks() {
+  local dom="$1" type target raw pool vol path
+  while read -r type target raw; do
+    [[ -n "$target" && -n "$raw" ]] || continue
+    case "$type" in
+      file|block)
+        printf '%s %s\n' "$target" "$raw"
+        ;;
+      volume)
+        pool="${raw%%/*}"; vol="${raw#*/}"
+        path=$("$VIRSH" vol-path --pool "$pool" "$vol" 2>/dev/null) || continue
+        [[ -n "$path" ]] && printf '%s %s\n' "$target" "$path"
+        ;;
+    esac
+  done < <("$VIRSH" dumpxml "$dom" 2>/dev/null | awk '
+    BEGIN { q=sprintf("%c",39) }
+    function attr(line, name,   re,m,plen) {
+      re = name "=" q "[^" q "]+" q
+      if (!match(line, re)) return ""
+      m = substr(line, RSTART, RLENGTH)
+      plen = length(name) + 2
+      return substr(m, plen+1, length(m) - plen - 1)
+    }
+    /<disk / { indisk=1; dtype=attr($0,"type"); ddev=attr($0,"device"); dtarget=""; dsrc=""; next }
+    indisk && /<source / {
+      if (dtype=="file")        dsrc=attr($0,"file")
+      else if (dtype=="block")  dsrc=attr($0,"dev")
+      else if (dtype=="volume") dsrc=attr($0,"pool") "/" attr($0,"volume")
+      next
+    }
+    indisk && /<target / { if (dtarget=="") dtarget=attr($0,"dev"); next }
+    indisk && /<\/disk>/ {
+      if (ddev=="disk" && dtarget!="" && dsrc!="" && dsrc!="/") print dtype, dtarget, dsrc
+      indisk=0
+    }')
+}
+
+# Directory holding the golden masters. When GOLDEN_VERSION is set, masters
+# live under a per-version subdir so multiple versions can coexist; unset keeps
+# the legacy flat layout directly under GOLDEN_DIR.
+golden_dir() {
+  if [[ -n "${GOLDEN_VERSION:-}" ]]; then
+    printf '%s/%s' "$GOLDEN_DIR" "$GOLDEN_VERSION"
+  else
+    printf '%s' "$GOLDEN_DIR"
+  fi
+}
+
+# Path of the read-only golden master for a given node + disk target.
+golden_path() { printf '%s/%s__%s.qcow2' "$(golden_dir)" "$1" "$2"; }
+
+# Coordinated graceful shutdown of every node; block until all are "shut off".
+coordinated_shutdown() {
+  local n state deadline all_off
+  for n in "${NODES[@]}"; do
+    state=$(domain_state "$n" || true)
+    if [[ "$state" == "running" || "$state" == "paused" ]]; then
+      log "graceful shutdown -> $n"
+      "$VIRSH" shutdown "$n" >/dev/null 2>&1 || true
+    else
+      log "$n already in state: ${state:-undefined}"
+    fi
+  done
+
+  deadline=$(( $(date +%s) + SHUTDOWN_TIMEOUT ))
+  while true; do
+    all_off=1
+    for n in "${NODES[@]}"; do
+      [[ "$(domain_state "$n" 2>/dev/null)" == "shut off" ]] || all_off=0
+    done
+    (( all_off )) && { log "all nodes shut off"; return 0; }
+
+    if (( $(date +%s) >= deadline )); then
+      if (( FORCE_DESTROY_ON_TIMEOUT )); then
+        err "shutdown timed out; FORCE_DESTROY_ON_TIMEOUT=1 -> destroying"
+        for n in "${NODES[@]}"; do
+          [[ "$(domain_state "$n" 2>/dev/null)" == "shut off" ]] \
+            || "$VIRSH" destroy "$n" >/dev/null 2>&1 || true
+        done
+        return 0
+      fi
+      return 1
+    fi
+    sleep 3
+  done
+}
+
+# --- readiness probe (used by boot script) ---------------------------------
+
+ssh_node() {  # ssh_node <ip> <remote-cmd>
+  ssh "${SSH_OPTS[@]}" -i "$SSH_KEY" "$SSH_USER@$1" "$2" 2>/dev/null
+}
+
+# Count Ready nodes via the first reachable node; locally parses kubectl output.
+count_ready_nodes() {
+  local ip out
+  for ip in "${NODE_IPS[@]}"; do
+    out=$(ssh_node "$ip" "$REMOTE_GET_NODES_CMD" || true)
+    if [[ -n "$out" ]]; then
+      printf '%s\n' "$out" | awk '$2=="Ready"{c++} END{print c+0}'
+      return 0
+    fi
+  done
+  echo 0
+}
+
+# Returns 0 only when the cluster is considered ready.
+# Layered so a failing layer short-circuits with a clear log line.
+check_cluster_ready() {
+  local n ip ready
+
+  # a) all domains running
+  for n in "${NODES[@]}"; do
+    [[ "$(domain_state "$n" 2>/dev/null)" == "running" ]] \
+      || { log "  waiting: $n not running"; return 1; }
+  done
+
+  # b) all node IPs accept TCP/22
+  for ip in "${NODE_IPS[@]}"; do
+    timeout 5 bash -c ">/dev/tcp/$ip/22" 2>/dev/null \
+      || { log "  waiting: $ip ssh not reachable"; return 1; }
+  done
+
+  # c) kubernetes Ready count (adjust REMOTE_GET_NODES_CMD in config.sh)
+  ready=$(count_ready_nodes)
+  if (( ready < READY_NODE_COUNT )); then
+    log "  waiting: ${ready}/${READY_NODE_COUNT} nodes Ready"
+    return 1
+  fi
+
+  # >>> add further gates here if needed (etcd endpoint health, Longhorn, ...)
+  log "  ${ready}/${READY_NODE_COUNT} nodes Ready"
+  return 0
+}
+
+wait_for_ready() {
+  local deadline; deadline=$(( $(date +%s) + READY_TIMEOUT ))
+  while true; do
+    check_cluster_ready && return 0
+    (( $(date +%s) >= deadline )) && return 1
+    sleep "$READY_POLL_INTERVAL"
+  done
+}
+
 # Get the top directory (based on lib.sh location, not caller)
 get_top_dir() {
   cd "$( dirname "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd
