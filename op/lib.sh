@@ -112,27 +112,35 @@ coordinated_shutdown() {
 
 # --- readiness probe (used by boot script) ---------------------------------
 
-ssh_node() {  # ssh_node <ip> <remote-cmd>
-  ssh "${SSH_OPTS[@]}" -i "$SSH_KEY" "$SSH_USER@$1" "$2" 2>/dev/null
+ssh_node() {  # ssh_node <host-alias> <remote-cmd>
+  # Use the Terraform-generated ssh_config (correct user/key/host-key handling),
+  # the same way rke2-env.sh and the wait_* helpers reach the nodes.
+  ssh -F "$(get_top_dir)/state/ssh_config" "$1" "$2" 2>/dev/null
 }
 
-# Count Ready nodes via the first reachable node; locally parses kubectl output.
-count_ready_nodes() {
-  local ip out
-  for ip in "${NODE_IPS[@]}"; do
-    out=$(ssh_node "$ip" "$REMOTE_GET_NODES_CMD" || true)
-    if [[ -n "$out" ]]; then
-      printf '%s\n' "$out" | awk '$2=="Ready"{c++} END{print c+0}'
-      return 0
-    fi
+# Print "<ready> <total>" as seen by the FIRST control-plane node that answers.
+# Worker/agent nodes lack the admin kubeconfig, so kubectl there fails or prints
+# noise; we accept only output whose 2nd column is a real node STATUS
+# (Ready/NotReady) and stop at the first such node. <total> comes from kubectl
+# itself, so the readiness gate scales to any node count. "0 0" if none answer.
+node_ready_summary() {
+  local i host out total ready
+  for i in $(seq 1 "${#NODES[@]}"); do
+    host="node$i"
+    out=$(ssh_node "$host" "$REMOTE_GET_NODES_CMD" || true)
+    total=$(printf '%s\n' "$out" | awk '$2=="Ready"||$2=="NotReady"{c++} END{print c+0}')
+    (( total > 0 )) || continue
+    ready=$(printf '%s\n' "$out" | awk '$2=="Ready"{c++} END{print c+0}')
+    printf '%s %s\n' "$ready" "$total"
+    return 0
   done
-  echo 0
+  echo "0 0"
 }
 
 # Returns 0 only when the cluster is considered ready.
 # Layered so a failing layer short-circuits with a clear log line.
 check_cluster_ready() {
-  local n ip ready
+  local n ip ready total
 
   # a) all domains running
   for n in "${NODES[@]}"; do
@@ -146,15 +154,20 @@ check_cluster_ready() {
       || { log "  waiting: $ip ssh not reachable"; return 1; }
   done
 
-  # c) kubernetes Ready count (adjust REMOTE_GET_NODES_CMD in config.sh)
-  ready=$(count_ready_nodes)
-  if (( ready < READY_NODE_COUNT )); then
-    log "  waiting: ${ready}/${READY_NODE_COUNT} nodes Ready"
+  # c) all nodes Ready, as reported by the first control-plane node that answers
+  #    (adjust REMOTE_GET_NODES_CMD in config.sh). Wait until ready == total.
+  read -r ready total < <(node_ready_summary)
+  if (( total == 0 )); then
+    log "  waiting: no control-plane node is serving kubectl yet"
+    return 1
+  fi
+  if (( ready < total )); then
+    log "  waiting: ${ready}/${total} nodes Ready"
     return 1
   fi
 
   # >>> add further gates here if needed (etcd endpoint health, Longhorn, ...)
-  log "  ${ready}/${READY_NODE_COUNT} nodes Ready"
+  log "  ${ready}/${total} nodes Ready"
   return 0
 }
 

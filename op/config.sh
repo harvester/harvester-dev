@@ -58,13 +58,12 @@ FORCE_DESTROY_ON_TIMEOUT=${FORCE_DESTROY_ON_TIMEOUT:-0}
 
 READY_TIMEOUT=${READY_TIMEOUT:-600}        # overall wait budget (s)
 READY_POLL_INTERVAL=${READY_POLL_INTERVAL:-10}
-READY_NODE_COUNT=${READY_NODE_COUNT:-3}    # quorum is 2/3; full health is 3/3
+# Readiness now waits until ALL nodes report Ready (total is taken from kubectl
+# itself, via the first control-plane node), so no fixed node count is needed.
 
-# SSH used by the readiness probe.
-SSH_USER=${SSH_USER:-rancher}
-SSH_KEY=${SSH_KEY:-$HOME/.ssh/id_rsa}
-SSH_OPTS=(-o BatchMode=yes -o ConnectTimeout=5
-          -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null)
+# The readiness probe SSHes to nodes via the Terraform-generated
+# state/ssh_config (host aliases node1..nodeN), so no key/user is configured
+# here -- see ssh_node() in lib.sh.
 
 # Remote command run on the first reachable node; should print `kubectl get
 # nodes --no-headers` style output. Ready-count is computed locally from this.
