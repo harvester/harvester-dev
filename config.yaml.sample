@@ -61,6 +61,8 @@ nodes:
       - mac: 52:54:00:01:9b:5b
         host_bridge: br9
     disk_size: 500G
+    # optional: attach an extra data disk as /dev/vdb; omit this line to skip it
+    extra_disk_size: 100G
     mgmt_interface: enp1s0
     role: default
     vnc_port: 5951

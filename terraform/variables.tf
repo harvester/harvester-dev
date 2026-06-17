@@ -13,8 +13,9 @@ locals {
   # Transform nodes array into a map with index as key for for_each
   nodes = {
     for idx, node in local.config.nodes : idx => merge(node, {
-      name            = "${local.prefix}-node${idx + 1}"
-      disk_size_bytes = tonumber(replace(node.disk_size, "G", "")) * 1073741824
+      name                  = "${local.prefix}-node${idx + 1}"
+      disk_size_bytes       = tonumber(replace(node.disk_size, "G", "")) * 1073741824
+      extra_disk_size_bytes = try(tonumber(replace(node.extra_disk_size, "G", "")) * 1073741824, null)
     })
   }
 

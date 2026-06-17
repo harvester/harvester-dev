@@ -30,6 +30,26 @@ resource "libvirt_volume" "node_disk" {
   }
 }
 
+# Create an extra data disk volume for nodes that set extra_disk_size
+resource "libvirt_volume" "node_extra_disk" {
+  for_each = { for k, node in local.nodes : k => node if node.extra_disk_size_bytes != null }
+
+  name     = "${each.value.name}-extra-disk.qcow2"
+  pool     = "default"
+  capacity = each.value.extra_disk_size_bytes
+
+  target = {
+    format = {
+      type = "qcow2"
+    }
+    permissions = {
+      owner = data.external.qemu_ids.result.uid != "" ? data.external.qemu_ids.result.uid : null
+      group = data.external.qemu_ids.result.gid != "" ? data.external.qemu_ids.result.gid : null
+      mode  = "0764"
+    }
+  }
+}
+
 # Create libvirt domains for each node
 resource "libvirt_domain" "node" {
   for_each = local.nodes
@@ -75,8 +95,8 @@ resource "libvirt_domain" "node" {
   running = false
 
   devices = {
-    disks = [
-      {
+    disks = concat(
+      [{
         driver = {
           name = "qemu"
           type = "qcow2"
@@ -91,8 +111,24 @@ resource "libvirt_domain" "node" {
           dev = "vda"
           bus = "virtio"
         }
-      }
-    ]
+      }],
+      each.value.extra_disk_size_bytes != null ? [{
+        driver = {
+          name = "qemu"
+          type = "qcow2"
+        }
+        source = {
+          volume = {
+            pool   = "default"
+            volume = libvirt_volume.node_extra_disk[each.key].name
+          }
+        }
+        target = {
+          dev = "vdb"
+          bus = "virtio"
+        }
+      }] : []
+    )
 
     serials = [
       {
