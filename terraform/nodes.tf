@@ -75,8 +75,16 @@ resource "libvirt_domain" "node" {
     type            = "hvm"
     type_arch       = "x86_64"
     type_machine    = "q35"
+    # for ubuntu
+    #loader  = "/usr/share/OVMF/OVMF_CODE_4M.fd"
     loader          = "/usr/share/qemu/ovmf-x86_64-4m.bin"
     loader_readonly = "yes"
+    # for ubuntu
+    #loader_type = "pflash"
+    #nv_ram = {
+    #  nv_ram   = "/var/lib/libvirt/qemu/nvram/uefi-vm.fd"
+    #  template = "/usr/share/OVMF/OVMF_VARS_4M.fd"
+    #}
     boot_devices = [
       {
         dev = "hd"
