@@ -15,7 +15,9 @@ GOLDEN_VERSION="${1:-}"
 [[ -n "$GOLDEN_VERSION" ]] || die "usage: $(basename "$0") <version>  (e.g. v1.8)"
 
 require_cmd "$VIRSH" "$QEMU_IMG"
-[[ $EUID -eq 0 ]] || die "run as root (reads/converts libvirt disk images)"
+# Instead of requiring root: confirm we can reach libvirt now, and (per disk, in
+# step 2) that the source disk is readable and the golden dir is writable.
+require_libvirt
 
 for n in "${NODES[@]}"; do
   domain_exists "$n" || die "domain not found: $n"
@@ -44,6 +46,8 @@ for n in "${NODES[@]}"; do
     [[ -n "$target" ]] || continue
     g=$(golden_path "$n" "$target")
     [[ -f "$src" ]] || die "source disk missing: $src"
+    require_readable "$src"
+    require_writable_dir "$g"
     if "$QEMU_IMG" info "$src" | grep -q '^backing file:'; then
       die "$src has a backing chain -- create-golden must run once on a fresh \
 cluster, not after boot-from-golden (refusing to copy an overlay)"

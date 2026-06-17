@@ -40,6 +40,13 @@ GOLDEN_DIR=${GOLDEN_DIR:-/var/lib/libvirt/images/golden}
 VIRSH=${VIRSH:-virsh}
 QEMU_IMG=${QEMU_IMG:-qemu-img}
 
+# libvirt connection URI, taken from config.yaml (provider.libvirt.uri) so the
+# op scripts target the same endpoint as Terraform. Exported as
+# LIBVIRT_DEFAULT_URI so every `virsh` call in lib.sh uses it without per-call
+# flags. Override by exporting LIBVIRT_URI before sourcing.
+LIBVIRT_URI=${LIBVIRT_URI:-$(yq -e '.provider.libvirt.uri' "$CONFIG_FILE")}
+export LIBVIRT_DEFAULT_URI="$LIBVIRT_URI"
+
 # Ownership/permissions applied to freshly created overlay disks so the
 # libvirt-qemu process can open them read-write.
 OVERLAY_OWNER=${OVERLAY_OWNER:-libvirt-qemu:kvm}

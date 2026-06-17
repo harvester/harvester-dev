@@ -14,7 +14,9 @@ GOLDEN_VERSION="${1:-}"
 [[ -n "$GOLDEN_VERSION" ]] || die "usage: $(basename "$0") <version>  (e.g. v1.8)"
 
 require_cmd "$VIRSH" "$QEMU_IMG" ssh curl yq
-[[ $EUID -eq 0 ]] || die "run as root (recreates overlay disks + starts domains)"
+# Instead of requiring root: confirm we can reach libvirt now, and (per disk, in
+# step 1) that the golden is readable and the overlay's dir is writable.
+require_libvirt
 
 for n in "${NODES[@]}"; do
   domain_exists "$n" || die "domain not found: $n"
@@ -39,6 +41,8 @@ for n in "${NODES[@]}"; do
     [[ -n "$target" ]] || continue
     g=$(golden_path "$n" "$target")
     [[ -f "$g" ]] || die "golden missing for $n/$target: $g (run nodes:create-golden first)"
+    require_readable "$g"
+    require_writable_dir "$src"
     log "  $n ($target): overlay $src  (backing $g)"
     rm -f "$src"
     "$QEMU_IMG" create -f qcow2 -b "$g" -F qcow2 "$src" >/dev/null

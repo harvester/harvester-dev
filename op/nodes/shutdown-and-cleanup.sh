@@ -14,7 +14,9 @@ source "$SCRIPT_DIR/../lib.sh"
 source "$SCRIPT_DIR/../config.sh"
 
 require_cmd "$VIRSH"
-[[ $EUID -eq 0 ]] || die "run as root (destroys domains)"
+# Instead of requiring root: confirm we can reach libvirt (all this script does
+# is power off domains).
+require_libvirt
 
 # power off (immediate — overlay state is disposable and reset on next boot).
 log "powering off domains"

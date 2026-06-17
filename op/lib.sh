@@ -15,6 +15,40 @@ require_cmd() {
   done
 }
 
+# Access checks used instead of a blanket "must be root" gate: verify the
+# current user can actually reach the resources a script touches.
+
+# libvirt connection (LIBVIRT_DEFAULT_URI from config.yaml) -- needed by any
+# script that does domain start/destroy/dumpxml. We check `virsh uri` (returns
+# the URI actually connected) rather than `virsh list`, because list succeeds on
+# qemu:///session too -- it just returns an empty set with exit 0. Without this,
+# a non-root run that silently fell back to the session would pass here and only
+# fail later as a misleading "domain not found".
+require_libvirt() {
+  local uri
+  uri=$("$VIRSH" uri 2>/dev/null) \
+    || die "cannot reach libvirt (${LIBVIRT_DEFAULT_URI:-default uri}) as $(id -un) -- check provider.libvirt.uri in config.yaml or your libvirt group membership"
+  [[ "$uri" == *system* ]] \
+    || die "virsh connected to '$uri' (not system) as $(id -un) -- non-root defaults to qemu:///session which has no domains; set LIBVIRT_DEFAULT_URI"
+}
+
+# A file must be readable by the current user.
+require_readable() { [[ -r "$1" ]] || die "not readable by $(id -un): $1"; }
+
+# We must be able to create/replace files in the directory holding $1 (covers
+# rm + recreate of overlays and writing new golden images). Pass the full path
+# of the FILE you intend to write -- the dir checked is its parent. We probe by
+# actually creating+removing a temp file rather than testing the `-w` bit, which
+# misreports under ACLs / setgid / root-squash (and we deliberately use
+# group-writable, non-default-owner dirs here).
+require_writable_dir() {
+  local d probe; d=$(dirname "$1")
+  [[ -d "$d" ]] || die "directory does not exist: $d"
+  probe="$d/.wprobe.$$"
+  if ( : > "$probe" ) 2>/dev/null; then rm -f "$probe"
+  else die "directory not writable by $(id -un): $d"; fi
+}
+
 domain_exists() { "$VIRSH" dominfo "$1" >/dev/null 2>&1; }
 domain_state()  { "$VIRSH" domstate "$1" 2>/dev/null; }
 
