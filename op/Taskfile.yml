@@ -135,10 +135,6 @@ tasks:
       - task: nodes-snapshot-clean
       - rm -f {{.STATE_DIR}}/nodes_installed
       - rm -f {{.STATE_DIR}}/cluster_config.yaml
-  nodes-clean-golden:
-    desc: 'Remove golden master images (best-effort; usage: task nodes-clean-golden -- <version>, omit version to remove all)'
-    cmds:
-      - ./nodes/clean-golden.sh {{.CLI_ARGS}}
   nodes-destroy:
     desc: Destroy all node domains in libvirt
     cmds:
@@ -176,18 +172,19 @@ tasks:
       - task: nodes-destroy
       - task: nodes-snapshot-revert
       - task: nodes-install
-  nodes-create-golden:
-    desc: 'Create a golden image from the current node disk state (usage: task nodes-create-golden -- <version>)'
+  nodes-golden-create:
+    desc: 'Create a golden image from the current node disk state (usage: task op:nodes-golden-create -- <version>)'
     cmds:
       - ./nodes/create-golden.sh {{.CLI_ARGS}}
-  nodes-boot-from-golden:
-    desc: 'Boot the nodes from a previously created golden image (usage: task nodes-boot-from-golden -- <version>)'
+  nodes-golden-restore-and-boot:
+    desc: 'Boot the nodes from a previously created golden image (usage: task op:nodes-golden-restore-and-boot -- <version>)'
     cmds:
-      - ./nodes/boot-from-golden.sh {{.CLI_ARGS}}
-  nodes-shutdown-and-cleanup:
-    desc: Shut down the nodes and clean up the previous golden image boot
+      - ./nodes/restore-from-golden.sh {{.CLI_ARGS}}
+      - task: nodes-install
+  nodes-golden-clean:
+    desc: 'Remove golden master images (best-effort; usage: task op:nodes-golden-clean -- <version>, omit version to remove all)'
     cmds:
-      - ./nodes/shutdown-and-cleanup.sh
+      - ./nodes/clean-golden.sh {{.CLI_ARGS}}
 
 # ISO boot nodes (VMs that supposed to boot from ISO to do the installation)
   iso-boot-nodes-start:

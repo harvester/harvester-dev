@@ -35,7 +35,7 @@ for n in "${NODES[@]}"; do
 done
 
 # 1) fresh overlay per disk, backing = golden. XML is never modified.
-log "step 1/4: recreating overlays from golden"
+log "step:  recreating overlays from golden"
 for n in "${NODES[@]}"; do
   while read -r target src; do
     [[ -n "$target" ]] || continue
@@ -51,28 +51,3 @@ for n in "${NODES[@]}"; do
   done < <(domain_disks "$n")
 done
 
-# 2) start all domains.
-log "step 2/4: starting domains"
-for n in "${NODES[@]}"; do
-  "$VIRSH" start "$n" >/dev/null
-  log "  started $n"
-done
-
-# 3) wait for node/k8s readiness.
-log "step 3/4: waiting for cluster ready (budget ${READY_TIMEOUT}s)"
-if ! wait_for_ready; then
-  err "cluster did NOT become ready within ${READY_TIMEOUT}s"
-  exit 1
-fi
-log "cluster READY"
-
-# 4) wait for the VIP (kube-vip / API server) to be reachable. Nodes can be
-#    k8s-Ready before the VIP is served, so gate on it separately (own timeout).
-log "step 4/4: waiting for VIP to be reachable"
-if "$SCRIPT_DIR/wait-vip.sh"; then
-  log "VIP reachable; cluster fully ready"
-  exit 0
-else
-  err "VIP did not become reachable"
-  exit 1
-fi
