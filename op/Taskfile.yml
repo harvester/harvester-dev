@@ -251,6 +251,10 @@ tasks:
     desc: Configure registry mirror for the Harvester cluster
     cmds:
       - ./harvester/configure-registries.sh
+  harvester-patch-images:
+    desc: Patch harvester and harvester-webhook container images
+    cmds:
+      - ./harvester/patch-harvester-images.sh {{.CLI_ARGS}}
 
 # tests
   test-cluster-ready:

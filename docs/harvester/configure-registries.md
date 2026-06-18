@@ -1,4 +1,4 @@
-## Configure Registry Mirrors
+## op:harvester-configure-registries
 
 The `op:harvester-configure-registries` task applies the `containerd-registry` setting to the Harvester cluster, directing containerd to pull images through local mirror endpoints instead of the upstream registries.
 
