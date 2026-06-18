@@ -89,7 +89,7 @@ resource "libvirt_domain" "iso_node" {
         source = {
           volume = {
             pool   = "default"
-            volume = libvirt_volume.iso_node_data_disk["${each.value.name}-data${i}"].name
+            volume = libvirt_volume.iso_node_data_disk["${each.value.name}-disk${i + 1}"].name
           }
         }
         target = {

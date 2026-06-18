@@ -13,11 +13,21 @@ locals {
   # Transform nodes array into a map with index as key for for_each
   nodes = {
     for idx, node in local.config.nodes : idx => merge(node, {
-      name                  = "${local.prefix}-node${idx + 1}"
-      disk_size_bytes       = tonumber(replace(node.disk_size, "G", "")) * 1073741824
-      extra_disk_size_bytes = try(tonumber(replace(node.extra_disk_size, "G", "")) * 1073741824, null)
+      name  = "${local.prefix}-node${idx + 1}"
+      disks = try(node.disks, ["500G"])
     })
   }
+
+  # Precompute disk volume configs: one entry per (node, disk_index) pair
+  node_disk_entries = flatten([
+    for node_key, node in local.nodes : [
+      for i in range(length(node.disks)) : {
+        key   = "${node.name}-disk${i + 1}"
+        name  = "${node.name}-disk${i + 1}.qcow2"
+        bytes = tonumber(replace(node.disks[i], "G", "")) * 1073741824
+      }
+    ]
+  ])
 
   # Render Harvester node configuration files
   harvester_node_configs = {
@@ -53,8 +63,8 @@ locals {
   iso_disk_entries = flatten([
     for node in local.iso_nodes : [
       for i in range(length(node.disks)) : {
-        key   = "${node.name}-data${i}"
-        name  = "${node.name}-data${i}.qcow2"
+        key   = "${node.name}-disk${i + 1}"
+        name  = "${node.name}-disk${i + 1}.qcow2"
         bytes = tonumber(replace(node.disks[i], "G", "")) * 1073741824
       }
     ]

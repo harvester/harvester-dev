@@ -55,50 +55,57 @@ nodes:
   - ip: 10.8.0.11
     cpu: 8
     memory: 24
+    # Disks attached in order: vda, vdb
+    disks:
+      - 500G
+      - 200G
     interfaces:
       - mac: 52:54:00:6a:59:7c
         host_bridge: br8
       - mac: 52:54:00:01:9b:5b
         host_bridge: br9
-    disk_size: 500G
-    # optional: attach an extra data disk as /dev/vdb; omit this line to skip it
-    extra_disk_size: 100G
     mgmt_interface: enp1s0
     role: default
     vnc_port: 5951
   - ip: 10.8.0.12
     cpu: 8
     memory: 16
+    disks:
+      - 500G
+      - 200G
     interfaces:
       - mac: 52:54:00:55:1e:0c
         host_bridge: br8
       - mac: 52:54:00:b9:a8:bf
         host_bridge: br9
-    disk_size: 500G
     mgmt_interface: enp1s0
     role: default
     vnc_port: 5952
   - ip: 10.8.0.13
     cpu: 8
     memory: 16
+    disks:
+      - 500G
+      - 200G
     interfaces:
       - mac: 52:54:00:cf:c9:aa
         host_bridge: br8
       - mac: 52:54:00:17:13:53
         host_bridge: br9
-    disk_size: 500G
     mgmt_interface: enp1s0
     role: default
     vnc_port: 5953
   - ip: 10.8.0.14
     cpu: 8
     memory: 16
+    disks:
+      - 500G
+      - 200G
     interfaces:
       - mac: 52:54:00:84:ef:b9
         host_bridge: br8
       - mac: 52:54:00:44:d9:e1
         host_bridge: br9
-    disk_size: 500G
     mgmt_interface: enp1s0
     role: default
     vnc_port: 5954

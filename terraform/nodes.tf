@@ -12,31 +12,11 @@ data "external" "qemu_ids" {
 
 # Create disk volumes for each node
 resource "libvirt_volume" "node_disk" {
-  for_each = local.nodes
+  for_each = { for entry in local.node_disk_entries : entry.key => entry }
 
-  name     = "${each.value.name}-disk.qcow2"
+  name     = each.value.name
   pool     = "default"
-  capacity = each.value.disk_size_bytes
-
-  target = {
-    format = {
-      type = "qcow2"
-    }
-    permissions = {
-      owner = data.external.qemu_ids.result.uid != "" ? data.external.qemu_ids.result.uid : null
-      group = data.external.qemu_ids.result.gid != "" ? data.external.qemu_ids.result.gid : null
-      mode  = "0764"
-    }
-  }
-}
-
-# Create an extra data disk volume for nodes that set extra_disk_size
-resource "libvirt_volume" "node_extra_disk" {
-  for_each = { for k, node in local.nodes : k => node if node.extra_disk_size_bytes != null }
-
-  name     = "${each.value.name}-extra-disk.qcow2"
-  pool     = "default"
-  capacity = each.value.extra_disk_size_bytes
+  capacity = each.value.bytes
 
   target = {
     format = {
@@ -103,40 +83,22 @@ resource "libvirt_domain" "node" {
   running = false
 
   devices = {
-    disks = concat(
-      [{
-        driver = {
-          name = "qemu"
-          type = "qcow2"
+    disks = [for i in range(length(each.value.disks)) : {
+      driver = {
+        name = "qemu"
+        type = "qcow2"
+      }
+      source = {
+        volume = {
+          pool   = "default"
+          volume = libvirt_volume.node_disk["${each.value.name}-disk${i + 1}"].name
         }
-        source = {
-          volume = {
-            pool   = "default"
-            volume = libvirt_volume.node_disk[each.key].name
-          }
-        }
-        target = {
-          dev = "vda"
-          bus = "virtio"
-        }
-      }],
-      each.value.extra_disk_size_bytes != null ? [{
-        driver = {
-          name = "qemu"
-          type = "qcow2"
-        }
-        source = {
-          volume = {
-            pool   = "default"
-            volume = libvirt_volume.node_extra_disk[each.key].name
-          }
-        }
-        target = {
-          dev = "vdb"
-          bus = "virtio"
-        }
-      }] : []
-    )
+      }
+      target = {
+        dev = "vd${substr("abcdefghijklmnopqrstuvwxyz", i, 1)}"
+        bus = "virtio"
+      }
+    }]
 
     serials = [
       {
