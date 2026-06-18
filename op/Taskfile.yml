@@ -247,6 +247,10 @@ tasks:
     desc: Delete guest clusters on Harvester
     cmds:
       - ./harvester/delete-guest-clusters.sh
+  harvester-configure-registries:
+    desc: Configure registry mirror for the Harvester cluster
+    cmds:
+      - ./harvester/configure-registries.sh
 
 # tests
   test-cluster-ready:
