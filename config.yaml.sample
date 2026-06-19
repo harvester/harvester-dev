@@ -134,6 +134,10 @@ harvester:
     uplink: enp2s0
   vm_network:
     vlan_id: 1
+  # containerd-registry setting. Note this is applied only when calling `harvester-configure-registries` task
+  registry_mirrors:
+    - registry: docker.io
+      endpoint: http://10.10.0.101:5000
 guest_clusters:
   - name: gc-ubuntu
     enabled: true
