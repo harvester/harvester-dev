@@ -2,7 +2,8 @@
 locals {
   config = yamldecode(file("${path.module}/../config.yaml"))
 
-  prefix = local.config.provider.domain_prefix
+  prefix          = local.config.provider.domain_prefix
+  rancher_enabled = try(local.config.rancher.enabled, false)
 
   # Extract admin IP (strip subnet mask)
   admin_ip = split("/", local.config.admin.interfaces[0].ip)[0]

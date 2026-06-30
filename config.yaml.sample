@@ -30,6 +30,7 @@ admin:
     - ip: 10.9.0.10/24
       bridge: br9
 rancher:
+  enabled: false
   image_url: "/home/harvester/harvester-dev/artifacts/images/debian-13-generic-amd64.qcow2"
   image_vol_size: 50
   cpu: 4
