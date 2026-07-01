@@ -2,43 +2,52 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CONFIG="$SCRIPT_DIR/../config.yaml"
 IMAGES_DIR="$SCRIPT_DIR/../artifacts/images"
 
 mkdir -p "$IMAGES_DIR"
 
-download() {
-    local url="$1"
-    local dest="$2"
+download_image() {
+    local name="$1"
+    local url="$2"
+    local dest="$IMAGES_DIR/$name"
+    local lm_file="$IMAGES_DIR/${name}.last-modified"
 
-    if [[ -f "$dest" ]]; then
-        echo "Skipping $(basename "$dest"), already exists."
-        return
+    local headers server_lm
+    if ! headers=$(curl -fsLI "$url"); then
+        echo "Error: failed to fetch headers for $name ($url)" >&2
+        return 1
+    fi
+    server_lm=$(echo "$headers" | grep -i "^last-modified:" | tr -d '\r' | sed 's/^[^:]*: //') || true
+
+    if [[ -f "$dest" && -f "$lm_file" ]]; then
+        local stored_lm
+        stored_lm=$(cat "$lm_file")
+        if [[ -n "$server_lm" && "$server_lm" == "$stored_lm" ]]; then
+            echo "Skipping $name (up to date)."
+            return
+        fi
     fi
 
-    echo "Downloading $(basename "$dest") from $url..."
-    curl -fSL "$url" -o "$dest"
+    echo "Downloading $name from $url..."
+    local tmp
+    tmp=$(mktemp "$IMAGES_DIR/${name}.tmp.XXXXXX")
+    if [[ "$url" == *.gz ]]; then
+        echo "Extracting $name (gunzip)..."
+        curl -fSL "$url" | gunzip > "$tmp"
+    else
+        curl -fSL "$url" -o "$tmp"
+    fi
+    mv "$tmp" "$dest"
+
+    if [[ -n "$server_lm" ]]; then
+        printf '%s' "$server_lm" > "$lm_file"
+    fi
     echo "Done: $dest"
 }
 
-download_and_gunzip() {
-    local url="$1"
-    local dest="$2"
-
-    if [[ -f "$dest" ]]; then
-        echo "Skipping $(basename "$dest"), already exists."
-        return
-    fi
-
-    echo "Downloading $(basename "$dest") from $url..."
-    curl -fSL "$url" | gunzip > "$dest"
-    echo "Done: $dest"
-}
-
-download_and_gunzip \
-    "https://github.com/bk201/alpine-cloud-images/releases/download/20260520/3.23.4-x86_64-bios-cloudinit-vm-generic-20260520.img.gz" \
-    "$IMAGES_DIR/alpine-admin.img"
-
-
-download "https://cloud.debian.org/images/cloud/trixie/20260525-2489/debian-13-generic-amd64-20260525-2489.qcow2" "$IMAGES_DIR/debian-13-generic-amd64.qcow2"
-download "http://cloud-images.ubuntu.com/noble/20260323/noble-server-cloudimg-amd64.img" "$IMAGES_DIR/noble-server-cloudimg-amd64.img"
-download "https://download.opensuse.org/repositories/Cloud:/Images:/Leap_15.6/images/openSUSE-Leap-15.6.x86_64-NoCloud.qcow2" "$IMAGES_DIR/openSUSE-Leap-15.6.x86_64-NoCloud.qcow2"
+while IFS=$'\t' read -r name url; do
+    echo "Processing image: $name"
+    download_image "$name" "$url"
+    echo ""
+done < <(yq -r '.artifacts.images[] | [.name, .url] | @tsv' "$CONFIG")
