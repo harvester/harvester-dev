@@ -60,7 +60,7 @@ error_handler() {
 trap error_handler ERR EXIT
 
 install_k3s() {
-	curl -sfL https://get.k3s.io | sh -
+	curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="$INSTALL_K3S_VERSION" sh -
 }
 
 setup_k3s_localrc() {
