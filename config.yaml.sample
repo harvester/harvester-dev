@@ -39,7 +39,8 @@ admin:
       bridge: br9
 rancher:
   enabled: false
-  image_url: "/home/harvester/harvester-dev/artifacts/images/debian-13-generic-amd64.qcow2"
+  user: ubuntu
+  image_url: "/home/harvester/harvester-dev/artifacts/images/noble-server-cloudimg-amd64.img"
   image_vol_size: 50
   cpu: 4
   memory_in_mib: 8192

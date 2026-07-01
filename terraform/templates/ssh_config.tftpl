@@ -20,7 +20,7 @@ Host admin
 # Rancher node (Debian)
 Host rancher
     HostName ${rancher_ip}
-    User debian
+    User ${rancher_user}
     IdentityFile ${ssh_key_path}
 
 # Harvester nodes

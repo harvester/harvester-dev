@@ -15,6 +15,7 @@ resource "local_file" "ssh_config" {
   content = templatefile("${path.module}/templates/ssh_config.tftpl", {
     admin_ip      = local.admin_ip
     rancher_ip    = split("/", local.config.rancher.interfaces[0].ip)[0]
+    rancher_user  = local.config.rancher.user
     nodes         = local.config.nodes
     ssh_key_path  = "${abspath(path.module)}/../${local.config.admin.private_key_path}"
   })
