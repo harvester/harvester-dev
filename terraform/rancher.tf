@@ -13,7 +13,8 @@ variable "rancher_vm_password" {
 }
 
 resource "libvirt_volume" "rancher_base" {
-  name = "${local.prefix}-rancher-base.qcow2"
+  count = local.rancher_enabled ? 1 : 0
+  name  = "${local.prefix}-rancher-base.qcow2"
   pool = "default"
 
   target = {
@@ -30,12 +31,13 @@ resource "libvirt_volume" "rancher_base" {
 }
 
 resource "libvirt_volume" "rancher_disk" {
+  count    = local.rancher_enabled ? 1 : 0
   name     = "${local.prefix}-rancher-disk.qcow2"
   pool     = "default"
   capacity = local.config.rancher.image_vol_size * 1073741824
 
   backing_store = {
-    path = libvirt_volume.rancher_base.path
+    path = libvirt_volume.rancher_base[0].path
     format = {
       type = "qcow2"
     }
@@ -55,7 +57,8 @@ resource "libvirt_volume" "rancher_disk" {
 }
 
 resource "libvirt_cloudinit_disk" "rancher_cloudinit" {
-  name = "rancher-cloudinit.iso"
+  count = local.rancher_enabled ? 1 : 0
+  name  = "rancher-cloudinit.iso"
 
   user_data = templatefile("${path.module}/templates/rancher/user_data-debian.yaml.tftpl", {
     vm_password            = var.rancher_vm_password
@@ -70,7 +73,7 @@ resource "libvirt_cloudinit_disk" "rancher_cloudinit" {
 }
 
 resource "libvirt_domain" "harvester-dev-rancher" {
-  count       = var.rancher_node_count
+  count       = local.rancher_enabled ? var.rancher_node_count : 0
   name        = "${local.prefix}-rancher"
   description = "Source: ${abspath(path.module)}"
   type        = "kvm"
@@ -116,7 +119,7 @@ resource "libvirt_domain" "harvester-dev-rancher" {
         source = {
           volume = {
             pool   = "default"
-            volume = libvirt_volume.rancher_disk.name
+            volume = libvirt_volume.rancher_disk[0].name
           }
         }
         target = {
@@ -128,7 +131,7 @@ resource "libvirt_domain" "harvester-dev-rancher" {
         device = "cdrom"
         source = {
           file = {
-            file = libvirt_cloudinit_disk.rancher_cloudinit.path
+            file = libvirt_cloudinit_disk.rancher_cloudinit[0].path
           }
         }
         target = {
@@ -205,6 +208,6 @@ resource "libvirt_domain" "harvester-dev-rancher" {
 }
 
 data "libvirt_domain_interface_addresses" "rancher" {
-  count  = var.rancher_node_count
+  count  = local.rancher_enabled ? var.rancher_node_count : 0
   domain = libvirt_domain.harvester-dev-rancher[count.index].uuid
 }

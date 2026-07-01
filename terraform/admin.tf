@@ -168,7 +168,7 @@ resource "libvirt_domain" "harvester-dev-admin" {
     type_machine = "q35"
   }
 
-  running = true
+  running = false
 
   devices = {
 
