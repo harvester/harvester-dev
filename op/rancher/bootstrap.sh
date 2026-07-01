@@ -17,6 +17,26 @@ rancher_bootstrap() {
     terraform -chdir=bootstrap apply --auto-approve
 }
 
+wait_api_url() {
+    local api_url
+    local max_retries=10
+    local attempt=0
+
+    while [ $attempt -lt $max_retries ]; do
+        api_url=$(terraform -chdir=bootstrap output -json | jq -r .api_url.value)
+        if [ -n "$api_url" ] && [ "$api_url" != "null" ]; then
+            return 0
+        fi
+        attempt=$((attempt + 1))
+        echo "api_url is empty, running terraform refresh (attempt $attempt/$max_retries)..."
+        terraform -chdir=bootstrap refresh
+        sleep 20
+    done
+
+    echo "Error: api_url is still empty after $max_retries attempts."
+    exit 1
+}
+
 rancher_bootstrap_post() {
     pushd $SCRIPT_DIR > /dev/null
 
@@ -48,5 +68,6 @@ EOF
 }
 
 rancher_bootstrap
+wait_api_url
 save_credentials
 rancher_bootstrap_post
