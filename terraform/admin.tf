@@ -63,7 +63,7 @@ resource "libvirt_volume" "admin_base" {
 
   create = {
     content = {
-      url = local.config.admin.image_url
+      url = local.admin_image_url
     }
   }
 }

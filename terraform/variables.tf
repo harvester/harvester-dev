@@ -47,6 +47,24 @@ locals {
     })
   }
 
+  project_dir = abspath("${path.module}/..")
+
+  admin_image_url = (
+    startswith(local.config.admin.image_url, "http://")  ||
+    startswith(local.config.admin.image_url, "https://") ||
+    startswith(local.config.admin.image_url, "/")
+    ? local.config.admin.image_url
+    : abspath("${local.project_dir}/${local.config.admin.image_url}")
+  )
+
+  rancher_image_url = (
+    startswith(local.config.rancher.image_url, "http://")  ||
+    startswith(local.config.rancher.image_url, "https://") ||
+    startswith(local.config.rancher.image_url, "/")
+    ? local.config.rancher.image_url
+    : abspath("${local.project_dir}/${local.config.rancher.image_url}")
+  )
+
   # Transform iso_boot config into a map with index as key for for_each
   iso_nodes = {
     for idx in range(try(local.config.iso_boot.count, 0)) : idx => {

@@ -25,7 +25,7 @@ resource "libvirt_volume" "rancher_base" {
 
   create = {
     content = {
-      url = local.config.rancher.image_url
+      url = local.rancher_image_url
     }
   }
 }

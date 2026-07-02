@@ -23,7 +23,8 @@ vip: 10.8.0.100
 vip_mac: 52:54:00:12:34:56
 vip_mode: dhcp
 admin:
-  image_url: "/home/harvester/harvester-dev/artifacts/images/alpine-admin.img"
+  # support "https://server/image", "/home/path/to/image", and "./relative_path/to/image"
+  image_url: "./artifacts/images/alpine-admin.img"
   image_vol_size: 20
   cpu: 1
   memory_in_mib: 256
@@ -40,7 +41,7 @@ admin:
 rancher:
   enabled: false
   user: ubuntu
-  image_url: "/home/harvester/harvester-dev/artifacts/images/noble-server-cloudimg-amd64.img"
+  image_url: "./artifacts/images/noble-server-cloudimg-amd64.img"
   image_vol_size: 50
   cpu: 4
   memory_in_mib: 8192
