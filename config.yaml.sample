@@ -1,10 +1,10 @@
 harvester_release_url: https://releases.rancher.com/harvester
-artifact_server_url: http://10.8.0.101:8787
-harvester_version: harvester-v1.7.1
-harvester_iso_url: http://10.8.0.101:8787/isos/harvester-v1.7.1/harvester-v1.7.1-amd64.iso
-harvester_kernel_url: http://10.8.0.101:8787/isos/harvester-v1.7.1/harvester-v1.7.1-vmlinuz-amd64
-harvester_ramdisk_url: http://10.8.0.101:8787/isos/harvester-v1.7.1/harvester-v1.7.1-initrd-amd64
-harvester_rootfs_url: http://10.8.0.101:8787/isos/harvester-v1.7.1/harvester-v1.7.1-rootfs-amd64.squashfs
+artifact_server_url: http://10.0.10.1:8787
+harvester_version: harvester-master
+harvester_iso_url: http://10.0.10.1:8787/isos/harvester-master/harvester-master-amd64.iso
+harvester_kernel_url: http://10.0.10.1:8787/isos/harvester-master/harvester-master-vmlinuz-amd64
+harvester_ramdisk_url: http://10.0.10.1:8787/isos/harvester-master/harvester-master-initrd-amd64
+harvester_rootfs_url: http://10.0.10.1:8787/isos/harvester-master/harvester-master-rootfs-amd64.squashfs
 artifacts:
   images:
     - name: alpine-admin.img
@@ -19,7 +19,26 @@ provider:
     uri: "qemu:///system?socket=/var/run/libvirt/virtqemud-sock"
   domain_prefix: hvst
 token: my-token
-vip: 10.8.0.100
+networks:
+  nat:
+    bridge_name: hvst-libvirt
+    bridge_ip: "192.168.123.1"
+    netmask: "255.255.255.0"
+    dhcp_start: "192.168.123.5"
+    dhcp_end: "192.168.123.15"
+  mgmt:
+    bridge_name: hvst-mgmt
+    bridge_ip: "10.0.10.1"
+    netmask: "255.255.255.0"
+    dhcp_start: "10.0.10.50"
+    dhcp_end: "10.0.10.60"
+  data:
+    bridge_name: hvst-data
+    bridge_ip: "10.0.11.1"
+    netmask: "255.255.255.0"
+    dhcp_start: "10.0.11.100"
+    dhcp_end: "10.0.11.200"
+vip: 10.0.10.100
 vip_mac: 52:54:00:12:34:56
 vip_mode: dhcp
 admin:
@@ -34,10 +53,8 @@ admin:
     dns_servers:
       - 8.8.8.8
   interfaces:
-    - ip: 10.8.0.10/24
-      bridge: br8
-    - ip: 10.9.0.10/24
-      bridge: br9
+    - ip: 10.0.10.10/24
+    - ip: 10.0.11.10/24
 rancher:
   enabled: false
   user: ubuntu
@@ -46,24 +63,23 @@ rancher:
   cpu: 4
   memory_in_mib: 8192
   interfaces:
-    - ip: 10.8.0.5/24
-      bridge: br8
+    - ip: 10.0.10.5/24
   # Provisioning configuration
   k3s_version: v1.35.3+k3s1
   repo: https://releases.rancher.com/server-charts/latest
   version: v2.14.0
   bootstrap_password: password
   admin_password: "password1234"
-  hostname: rancher.10.8.0.5.sslip.io
+  hostname: rancher.10.0.10.5.sslip.io
 node_installed_timeout: 20
 node_password: rancher
 node_additional_keys: []
-node_count: 4
+node_count: 1
 node_disk_owner: qemu
 node_disk_group: qemu
 node_snapshot_after_provision: false
 nodes:
-  - ip: 10.8.0.11
+  - ip: 10.0.10.11
     cpu: 8
     memory: 24
     # Disks attached in order: vda, vdb
@@ -71,52 +87,44 @@ nodes:
       - 500G
       - 200G
     interfaces:
-      - mac: 52:54:00:6a:59:7c
-        host_bridge: br8
-      - mac: 52:54:00:01:9b:5b
-        host_bridge: br9
+      - mac: 52:54:00:2a:bf:8a
+      - mac: 52:54:00:e0:54:dd
     mgmt_interface: enp1s0
     role: default
     vnc_port: 5951
-  - ip: 10.8.0.12
+  - ip: 10.0.10.12
     cpu: 8
     memory: 16
     disks:
       - 500G
       - 200G
     interfaces:
-      - mac: 52:54:00:55:1e:0c
-        host_bridge: br8
-      - mac: 52:54:00:b9:a8:bf
-        host_bridge: br9
+      - mac: 52:54:00:19:63:0e
+      - mac: 52:54:00:60:28:64
     mgmt_interface: enp1s0
     role: default
     vnc_port: 5952
-  - ip: 10.8.0.13
+  - ip: 10.0.10.13
     cpu: 8
     memory: 16
     disks:
       - 500G
       - 200G
     interfaces:
-      - mac: 52:54:00:cf:c9:aa
-        host_bridge: br8
-      - mac: 52:54:00:17:13:53
-        host_bridge: br9
+      - mac: 52:54:00:99:59:d9
+      - mac: 52:54:00:13:26:a3
     mgmt_interface: enp1s0
     role: default
     vnc_port: 5953
-  - ip: 10.8.0.14
+  - ip: 10.0.10.14
     cpu: 8
     memory: 16
     disks:
       - 500G
       - 200G
     interfaces:
-      - mac: 52:54:00:84:ef:b9
-        host_bridge: br8
-      - mac: 52:54:00:44:d9:e1
-        host_bridge: br9
+      - mac: 52:54:00:2c:59:2c
+      - mac: 52:54:00:1c:53:fa
     mgmt_interface: enp1s0
     role: default
     vnc_port: 5954
@@ -148,7 +156,7 @@ harvester:
   # containerd-registry setting. Note this is applied only when calling `harvester-configure-registries` task
   registry_mirrors:
     - registry: docker.io
-      endpoint: http://10.10.0.101:5000
+      endpoint: http://10.0.10.1:5000
 guest_clusters:
   - name: gc-ubuntu
     enabled: true
@@ -204,7 +212,7 @@ guest_clusters:
 tests:
   upgrade:
     parallel_preload: true
-    iso_url: http://10.8.0.101/harvester/harvester.iso
+    iso_url: http://10.0.10.1/harvester/harvester.iso
 iso_boot:
   file: /path/to/install.iso
   count: 0
@@ -215,7 +223,3 @@ iso_boot:
   disks:
     - 500G
     - 500G
-  # Interfaces, specify the bridge that the interface(s) will connect to. MAC address will be generated automatically by libvirt
-  interfaces:
-    - host_bridge: br8
-    - host_bridge: br9

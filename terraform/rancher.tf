@@ -157,32 +157,31 @@ resource "libvirt_domain" "harvester-dev-rancher" {
         }
       }
     ]
-    interfaces = concat([
+    interfaces = [
       {
         model = {
           type = "virtio"
         }
         source = {
           network = {
-            network = libvirt_network.harvester_dev.name
+            network = libvirt_network.hvst_libvirt.name
           }
         }
         wait_for_ip = {
           source = "lease"
         }
-      }
-      ], [
-      for iface in local.config.rancher.interfaces : {
+      },
+      {
         model = {
           type = "virtio"
         }
         source = {
-          bridge = {
-            bridge = iface.bridge
+          network = {
+            network = libvirt_network.hvst_mgmt.name
           }
         }
       }
-    ])
+    ]
     channels = [
       {
         source = {
