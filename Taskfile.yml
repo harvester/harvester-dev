@@ -19,6 +19,11 @@ tasks:
     cmds:
       - task --list
     silent: true
+  download-images:
+    desc: Download essential images
+    cmds:
+      - ./scripts/download-images.sh
+      - ls -alh {{.ROOT_DIR}}/artifacts/images
   artifacts-up:
     desc: Build and run the artifacts server container
     cmds:
