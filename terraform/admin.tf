@@ -143,7 +143,7 @@ resource "libvirt_domain" "harvester-dev-admin" {
     type_machine = "q35"
   }
 
-  running = false
+  running = try(local.config.admin.running, false)
 
   devices = {
 

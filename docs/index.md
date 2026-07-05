@@ -20,6 +20,10 @@ Check the main [README.md](../README.md) for how to bring a Harvester clusters l
 
 - [op:test-cluster-upgrade](tests/test-cluster-upgrade.md) - upgrade Harvester cluster
 
+## Extra nodes
+
+- [Extra nodes](./extra/extra-nodes.md) - provision some extra nodes
+
 ## Troubleshooting
 
 - [Troubleshooting](troubleshooting.md) — common issues with libvirt, AppArmor/SELinux, networking, and domain management

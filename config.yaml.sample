@@ -67,6 +67,7 @@ admin:
   # support "https://server/image", "/home/path/to/image", and "./relative_path/to/image"
   image_url: "./artifacts/images/alpine-admin.img"
   image_vol_size: 20
+  running: true
   cpu: 1
   memory_in_mib: 256
   private_key_path: state/keys/id_rsa
@@ -84,6 +85,7 @@ admin:
 rancher:
   enabled: false
   user: ubuntu
+  running: true
   image_url: "./artifacts/images/noble-server-cloudimg-amd64.img"
   image_vol_size: 50
   cpu: 4
@@ -265,3 +267,32 @@ iso_boot:
   disks:
     - 500G
     - 500G
+##############################################################################
+# Extra nodes
+# Note: the VM live with the cluster, `task clean` will delete them!!
+##############################################################################
+extra_nodes:
+  - name: dev1
+    enabled: false
+    running: true
+    password: a
+    cpu: 2
+    memory: 4
+    image_url: "./artifacts/images/noble-server-cloudimg-amd64.img"
+    image_vol_size: 100
+    # Optional: cloud-init network config. Interface names vary by OS/image.
+    # enp1s0 = hvst-libvirt (NAT), enp2s0 = hvst-mgmt. Omit to skip network setup.
+    network_config:
+      version: 2
+      ethernets:
+        enp1s0:
+          dhcp4: true
+        enp2s0:
+          dhcp4: true
+  - name: dev2
+    enabled: false
+    running: false
+    cpu: 2
+    memory: 4
+    image_url: "./artifacts/images/noble-server-cloudimg-amd64.img"
+    image_vol_size: 100

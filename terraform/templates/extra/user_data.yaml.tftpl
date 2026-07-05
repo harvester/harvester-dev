@@ -1,0 +1,11 @@
+#cloud-config
+hostname: "${hostname}"
+%{ if vm_password != "" ~}
+password: "${vm_password}"
+ssh_pwauth: true
+chpasswd:
+  expire: false
+%{ endif ~}
+
+ssh_authorized_keys:
+  - ${ssh_pubkey}
