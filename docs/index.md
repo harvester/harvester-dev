@@ -16,6 +16,9 @@ Check the main [README.md](../README.md) for how to bring a Harvester clusters l
 - [Provisiong Rancher VM and import the Harvester cluster](./rancher/provisioning-and-import.md)
 - [Create guest clsuters](./rancher/guest-clusters.md)
 
+## Tests
+
+- [op:test-cluster-upgrade](tests/test-cluster-upgrade.md) - upgrade Harvester cluster
 
 ## Troubleshooting
 

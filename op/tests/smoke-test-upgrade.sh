@@ -19,8 +19,10 @@ cp "$SMOKE_TEST_DIR/upgrade_config.yaml.sample" "$upgrade_config"
 
 UPGRADE_ISO_URL=$(yq '.tests.upgrade.iso_url' "$CONFIG")
 NODE_COUNT=$(yq '.node_count' "$CONFIG")
+SKIP_VERSION_CHECK=$(yq '.tests.upgrade.skip_version_check' "$CONFIG")
 yq -i ".upgradeISOURL = \"$UPGRADE_ISO_URL\"" "$upgrade_config"
 yq -i ".nodeCount = $NODE_COUNT" "$upgrade_config"
+yq -i ".skipVersionCheck = $SKIP_VERSION_CHECK" "$upgrade_config"
 
 echo "Run smoke tests to verify the cluster can be upgraded successfully..."
 echo "Upgrade ISO URL: $UPGRADE_ISO_URL"

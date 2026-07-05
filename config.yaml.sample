@@ -249,6 +249,8 @@ guest_clusters:
 ##############################################################################
 tests:
   upgrade:
+    skip_version_check: true
+    parallel_preload: true    
     iso_url: http://10.0.20.1/harvester/harvester.iso
 ##############################################################################
 # ISO boot nodes
