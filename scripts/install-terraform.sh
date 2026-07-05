@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-TERRAFORM_VERSION="1.14.8"
-TERRAFORM_SHA256="56a5d12f47cbc1c6bedb8f5426ae7d5df984d1929572c24b56f4c82e9f9bf709"
+TERRAFORM_VERSION="1.15.7"
+TERRAFORM_SHA256="73bbb8f5188ad75d4fb853fd100ae4d7e146ef7af7db18776109642fdb7759d2"
 TERRAFORM_URL="https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip"
 INSTALL_DIR="${HOME}/bin"
 
