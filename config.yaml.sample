@@ -1,3 +1,13 @@
+##############################################################################
+# harvester-dev configuration file
+#
+# Bcause new lines are removed by yq when writing to the file, we remove the
+# new lines in this file and separate sections with a comments.
+# 
+##############################################################################
+##############################################################################
+# Release server configuration
+##############################################################################
 harvester_release_url: https://releases.rancher.com/harvester
 artifact_server_url: http://10.0.10.1:8787
 harvester_version: harvester-master
@@ -5,6 +15,9 @@ harvester_iso_url: http://10.0.10.1:8787/isos/harvester-master/harvester-master-
 harvester_kernel_url: http://10.0.10.1:8787/isos/harvester-master/harvester-master-vmlinuz-amd64
 harvester_ramdisk_url: http://10.0.10.1:8787/isos/harvester-master/harvester-master-initrd-amd64
 harvester_rootfs_url: http://10.0.10.1:8787/isos/harvester-master/harvester-master-rootfs-amd64.squashfs
+##############################################################################
+# Artifacts
+##############################################################################
 artifacts:
   images:
     - name: alpine-admin.img
@@ -13,12 +26,18 @@ artifacts:
       url: http://cloud-images.ubuntu.com/noble/20260615/noble-server-cloudimg-amd64.img
     - name: openSUSE-Leap-15.6.x86_64-NoCloud.qcow2
       url: https://download.opensuse.org/repositories/Cloud:/Images:/Leap_15.6/images/openSUSE-Leap-15.6.x86_64-NoCloud.qcow2
+##############################################################################
+# Provider configuration
+##############################################################################
 provider:
   libvirt:
     # uri: qemu:///system
     uri: "qemu:///system?socket=/var/run/libvirt/virtqemud-sock"
   domain_prefix: hvst
 token: my-token
+##############################################################################
+# Networks configuration
+##############################################################################
 networks:
   nat:
     bridge_name: hvst-libvirt
@@ -41,6 +60,9 @@ networks:
 vip: 10.0.10.100
 vip_mac: 52:54:00:12:34:56
 vip_mode: dhcp
+##############################################################################
+# Admin node
+##############################################################################
 admin:
   # support "https://server/image", "/home/path/to/image", and "./relative_path/to/image"
   image_url: "./artifacts/images/alpine-admin.img"
@@ -55,6 +77,10 @@ admin:
   interfaces:
     - ip: 10.0.10.10/24
     - ip: 10.0.11.10/24
+  egress_enabled: false
+##############################################################################
+# Rancher node
+##############################################################################
 rancher:
   enabled: false
   user: ubuntu
@@ -70,7 +96,10 @@ rancher:
   version: v2.14.0
   bootstrap_password: password
   admin_password: "password1234"
-  hostname: rancher.10.0.10.5.sslip.io
+  hostname: rancher.10.0.20.5.sslip.io
+##############################################################################
+# Harvester nodes
+##############################################################################
 node_installed_timeout: 20
 node_password: rancher
 node_additional_keys: []
@@ -128,6 +157,9 @@ nodes:
     mgmt_interface: enp1s0
     role: default
     vnc_port: 5954
+##############################################################################
+# Harvester cluster
+##############################################################################
 harvester:
   name: harvester-dev
   admin_password: password1234
@@ -156,7 +188,10 @@ harvester:
   # containerd-registry setting. Note this is applied only when calling `harvester-configure-registries` task
   registry_mirrors:
     - registry: docker.io
-      endpoint: http://10.0.10.1:5000
+      endpoint: http://10.0.20.1:5000
+##############################################################################
+# Guest clusters
+##############################################################################
 guest_clusters:
   - name: gc-ubuntu
     enabled: true
@@ -209,10 +244,15 @@ guest_clusters:
           - enable
           - '--now'
           - qemu-guest-agent.service
+##############################################################################
+# Tests
+##############################################################################
 tests:
   upgrade:
-    parallel_preload: true
-    iso_url: http://10.0.10.1/harvester/harvester.iso
+    iso_url: http://10.0.20.1/harvester/harvester.iso
+##############################################################################
+# ISO boot nodes
+##############################################################################
 iso_boot:
   file: /path/to/install.iso
   count: 0

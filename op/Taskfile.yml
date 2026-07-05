@@ -24,6 +24,13 @@ tasks:
     desc: Disable masquerading of node IPs when accessing external network.
     cmds:
       - ./admin/set-node-egress.sh 0
+  admin-enable-egress-if-configured:
+    vars:
+      EGRESS_ENABLED:
+        sh: yq '.admin.egress_enabled' ../config.yaml
+    if: '{{eq .EGRESS_ENABLED "true"}}'
+    cmds:
+      - task: admin-enable-egress
 
 # Rancher VM related tasks
   rancher-poweron:

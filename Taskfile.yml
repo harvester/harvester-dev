@@ -89,6 +89,7 @@ tasks:
       - task: build
       - task: op:admin-poweron
       - task: op:admin-wait
+      - task: op:admin-enable-egress-if-configured
   up:
     desc: Build base dev infra and install Harvester on nodes
     deps: [admin-up]
