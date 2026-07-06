@@ -6,19 +6,29 @@ TERRAFORM_SHA256="73bbb8f5188ad75d4fb853fd100ae4d7e146ef7af7db18776109642fdb7759
 TERRAFORM_URL="https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip"
 INSTALL_DIR="${HOME}/bin"
 
-if command -v terraform &>/dev/null; then
-    echo "terraform is already installed: $(command -v terraform)"
-    exit 0
-fi
+FORCE=false
+for arg in "$@"; do
+    case "${arg}" in
+        --force) FORCE=true ;;
+        *) echo "Unknown option: ${arg}" >&2; exit 1 ;;
+    esac
+done
 
-read -r -p "terraform was not found in PATH. Install terraform v${TERRAFORM_VERSION} to ${INSTALL_DIR}? [y/N] " answer
-case "${answer}" in
-    [yY][eE][sS]|[yY]) ;;
-    *)
-        echo "Aborted."
-        exit 1
-        ;;
-esac
+if command -v terraform &>/dev/null; then
+    if [[ "${FORCE}" == false ]]; then
+        echo "terraform is already installed: $(command -v terraform)"
+        exit 0
+    fi
+elif [[ "${FORCE}" == false ]]; then
+    read -r -p "terraform was not found in PATH. Install terraform v${TERRAFORM_VERSION} to ${INSTALL_DIR}? [y/N] " answer
+    case "${answer}" in
+        [yY][eE][sS]|[yY]) ;;
+        *)
+            echo "Aborted."
+            exit 1
+            ;;
+    esac
+fi
 
 mkdir -p "${INSTALL_DIR}"
 

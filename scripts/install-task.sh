@@ -6,19 +6,29 @@ TASK_SHA256="02c679ffae53dca791804847d78b31731615894e292948397c971c87ac9e95bd"
 TASK_URL="https://github.com/go-task/task/releases/download/v${TASK_VERSION}/task_linux_amd64.tar.gz"
 INSTALL_DIR="${HOME}/bin"
 
-if command -v task &>/dev/null; then
-    echo "task is already installed: $(command -v task)"
-    exit 0
-fi
+FORCE=false
+for arg in "$@"; do
+    case "${arg}" in
+        --force) FORCE=true ;;
+        *) echo "Unknown option: ${arg}" >&2; exit 1 ;;
+    esac
+done
 
-read -r -p "task was not found in PATH. Install task v${TASK_VERSION} to ${INSTALL_DIR}? [y/N] " answer
-case "${answer}" in
-    [yY][eE][sS]|[yY]) ;;
-    *)
-        echo "Aborted."
-        exit 1
-        ;;
-esac
+if command -v task &>/dev/null; then
+    if [[ "${FORCE}" == false ]]; then
+        echo "task is already installed: $(command -v task)"
+        exit 0
+    fi
+elif [[ "${FORCE}" == false ]]; then
+    read -r -p "task was not found in PATH. Install task v${TASK_VERSION} to ${INSTALL_DIR}? [y/N] " answer
+    case "${answer}" in
+        [yY][eE][sS]|[yY]) ;;
+        *)
+            echo "Aborted."
+            exit 1
+            ;;
+    esac
+fi
 
 mkdir -p "${INSTALL_DIR}"
 
