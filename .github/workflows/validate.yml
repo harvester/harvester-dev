@@ -1,0 +1,61 @@
+name: Validate Terraform
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  validate:
+    name: Terraform Validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Install terraform
+        run: |
+          mkdir -p $HOME/bin
+          ./scripts/install-terraform.sh --force
+          echo "$HOME/bin" >> $GITHUB_PATH
+      
+      - name: Create state files
+        run: |
+          mkdir -p state/keys
+          ssh-keygen -t rsa -b 4096 -f state/keys/id_rsa -N ""
+
+
+          cat > "state/rancher_bootstrap_credentials.yaml" <<EOF
+          api_url: "https://nowhere.com"
+          admin_token_key: "dummy_admin_token_key"
+          EOF
+
+      - name: Validate terraform/
+        run: |
+          terraform init -backend=false
+          terraform validate
+        working-directory: terraform
+
+      - name: Validate op/harvester/bootstrap
+        run: |
+          terraform init -backend=false
+          terraform validate
+        working-directory: op/harvester/bootstrap
+
+      - name: Validate op/harvester/guest-cluster
+        run: |
+          terraform init -backend=false
+          terraform validate
+        working-directory: op/harvester/guest-cluster
+
+      - name: Validate op/rancher/bootstrap
+        run: |
+          terraform init -backend=false
+          terraform validate
+        working-directory: op/rancher/bootstrap
+
+      - name: Validate op/rancher/bootstrap-post
+        run: |
+          terraform init -backend=false
+          terraform validate
+        working-directory: op/rancher/bootstrap-post
