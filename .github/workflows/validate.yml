@@ -21,6 +21,7 @@ jobs:
       
       - name: Create state files
         run: |
+          cp config.yaml.sample config.yaml
           mkdir -p state/keys
           ssh-keygen -t rsa -b 4096 -f state/keys/id_rsa -N ""
 
