@@ -25,32 +25,6 @@ provider "libvirt" {
   uri = local.config.provider.libvirt.uri
 }
 
-resource "libvirt_network" "harvester_dev" {
-  # count = 1
-  name      = "harvester-dev"
-  autostart = true
-
-  forward = {
-    mode = "nat"
-  }
-
-  ips = [
-    {
-      family  = "ipv4"
-      address = "192.168.123.1"
-      netmask = "255.255.255.0"
-      dhcp = {
-        ranges = [
-          {
-            start = "192.168.123.100"
-            end   = "192.168.123.254"
-          }
-        ]
-      }
-    }
-  ]
-}
-
 resource "libvirt_volume" "admin_base" {
   name = "${local.prefix}-admin-base.qcow2"
   pool = "default"
@@ -101,6 +75,7 @@ resource "libvirt_cloudinit_disk" "admin_cloudinit" {
       vip_mac           = local.config.vip_mac
       vip_mode          = local.config.vip_mode
       dns_servers      = local.config.admin.dhcp.dns_servers
+      networks         = local.config.networks
     })
     nginx_config           = templatefile("${path.module}/templates/admin/nginx-location.conf.tftpl", {})
     config                 = local.config
@@ -220,32 +195,41 @@ resource "libvirt_domain" "harvester-dev-admin" {
         }
       }
     ]
-    interfaces = concat([
+    interfaces = [
       {
         model = {
           type = "virtio"
         }
         source = {
           network = {
-            network = libvirt_network.harvester_dev.name
+            network = libvirt_network.hvst_libvirt.name
           }
         }
         wait_for_ip = {
           source = "lease"
         }
-      }
-      ], [
-      for iface in local.admin_interfaces : {
+      },
+      {
         model = {
           type = "virtio"
         }
         source = {
-          bridge = {
-            bridge = iface.bridge
+          network = {
+            network = libvirt_network.hvst_mgmt.name
+          }
+        }
+      },
+      {
+        model = {
+          type = "virtio"
+        }
+        source = {
+          network = {
+            network = libvirt_network.hvst_data.name
           }
         }
       }
-    ])
+    ]
     channels = [
       {
         source = {

@@ -19,10 +19,30 @@ tasks:
     cmds:
       - task --list
     silent: true
+  download-images:
+    desc: Download essential images
+    cmds:
+      - ./scripts/download-images.sh
+      - ls -alh {{.ROOT_DIR}}/artifacts/images
   artifacts-up:
     desc: Build and run the artifacts server container
     cmds:
       - ./artifacts/run-server.sh
+  artifacts-curl-test:
+    desc: Curl artifacts server from the admin node
+    cmds:
+      - |
+        ARTIFACTS_SERVER_URL="$(yq e '.artifact_server_url' {{.CONFIG_FILE}})"
+        ssh -F {{.ROOT_DIR}}/state/ssh_config admin "sudo curl --version &>/dev/null || sudo apk add curl"
+        ssh -F {{.ROOT_DIR}}/state/ssh_config admin "curl ${ARTIFACTS_SERVER_URL}"
+  generate-macs:
+    desc: Generate MAC addresses for nodes and update config file
+    cmds:
+      - ./scripts/generate-mac-addresses.sh
+  plan-networks:
+    desc: Plan networks
+    cmds:
+      - ./scripts/plan-networks.sh {{.CLI_ARGS}}
   select-install-iso:
     desc: Select an ISO and update config file
     cmds:

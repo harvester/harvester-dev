@@ -117,23 +117,34 @@ resource "libvirt_domain" "node" {
         }
       }
     ]
-
     interfaces = [
-      for iface in each.value.interfaces : {
+      {
         model = {
           type = "virtio"
         }
         source = {
-          bridge = {
-            bridge = iface.host_bridge
+          network = {
+            network = libvirt_network.hvst_mgmt.name
           }
         }
         mac = {
-          address = iface.mac
+          address = each.value.interfaces[0].mac
+        }
+      },
+      {
+        model = {
+          type = "virtio"
+        }
+        source = {
+          network = {
+            network = libvirt_network.hvst_data.name
+          }
+        }
+        mac = {
+          address = each.value.interfaces[1].mac
         }
       }
     ]
-
     channels = [
       {
         source = {

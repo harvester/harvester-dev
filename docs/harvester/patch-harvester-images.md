@@ -1,8 +1,8 @@
-## op:harvester-patch-images
+# op:harvester-patch-images
 
 The `op:harvester-patch-images` task patches the `harvester` managed chart to pull the `harvester` and `harvester-webhook` container images from a custom registry, then waits for the chart to reconcile.
 
-### Usage
+## Usage
 
 ```sh
 task op:harvester-patch-images -- <REPOSITORY> <TAG>
@@ -18,7 +18,7 @@ task op:harvester-patch-images -- 10.0.100.1:5000/rancher e2e-workflow-head-amd6
 >
 > If you include a registry in the `REPOSITORY`, you must ensure the registry has a publicly trusted certificate.
 
-### Development Usage 
+## Development Usage 
 
 For development purposes, you can omit the registry and use the task in combination with the [op:harvester-configure-registries](configure-registries.md) task. Assume you have a insecure HTTP registry at `http://172.17.0.1:5000`:
 
@@ -54,7 +54,7 @@ For development purposes, you can omit the registry and use the task in combinat
 This will configure k8s to run the harvester and harvester-webhook deployments with the `rancher/harvester:dev` and `rancher/harvester-webhook:dev` images. And use the private registry as the mirror.
 
 
-### How the task works
+## How the task works
 
 The script (`op/harvester/patch-harvester-images.sh`) runs three steps:
 

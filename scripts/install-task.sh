@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-TASK_VERSION="3.49.1"
-TASK_SHA256="4e7d24f1bf38218aec8f244eb7ba671f898830f9f87b3c9b30ff1c09e3135576"
+TASK_VERSION="3.52.0"
+TASK_SHA256="02c679ffae53dca791804847d78b31731615894e292948397c971c87ac9e95bd"
 TASK_URL="https://github.com/go-task/task/releases/download/v${TASK_VERSION}/task_linux_amd64.tar.gz"
 INSTALL_DIR="${HOME}/bin"
 

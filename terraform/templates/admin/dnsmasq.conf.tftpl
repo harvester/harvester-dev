@@ -22,10 +22,10 @@ dhcp-boot=tag:is_ipxe,"http://${admin_ip}/$${net0/ip}"
 dhcp-boot=tag:is_efi,tag:!is_ipxe,"ipxe.efi"
 dhcp-boot=tag:!is_efi,tag:!is_ipxe,"ipxe/undionly.kpxe"
 
-# DHCP pool for eth1 (10.8.0.0/24)
-dhcp-range=10.8.0.100,10.8.0.200,255.255.255.0,12h
-# DHCP pool for eth2 (10.9.0.0/24)
-dhcp-range=10.9.0.100,10.9.0.200,255.255.255.0,12h
+# DHCP pool for eth1 (mgmt)
+dhcp-range=${networks.mgmt.dhcp_start},${networks.mgmt.dhcp_end},${networks.mgmt.netmask},12h
+# DHCP pool for eth2 (data)
+dhcp-range=${networks.data.dhcp_start},${networks.data.dhcp_end},${networks.data.netmask},12h
 
 # Static DHCP reservations for nodes
 
