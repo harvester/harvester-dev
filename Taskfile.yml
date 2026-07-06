@@ -35,6 +35,24 @@ tasks:
         ARTIFACTS_SERVER_URL="$(yq e '.artifact_server_url' {{.CONFIG_FILE}})"
         ssh -F {{.ROOT_DIR}}/state/ssh_config admin "sudo curl --version &>/dev/null || sudo apk add curl"
         ssh -F {{.ROOT_DIR}}/state/ssh_config admin "curl ${ARTIFACTS_SERVER_URL}"
+  nfs-up:
+    desc: Build and run the NFS server (nfs-ganesha) container
+    cmds:
+      - ./nfs/run-server.sh
+  nfs-mount-test:
+    desc: Mount the NFS export from the admin node
+    preconditions:
+      - sh: test -f {{.ROOT_DIR}}/state/ssh_config
+        msg: "state/ssh_config not found, provision the admin node first"
+      - sh: ssh -F {{.ROOT_DIR}}/state/ssh_config -o ConnectTimeout=5 admin true
+        msg: "admin node is not reachable via SSH, make sure it is running"
+    cmds:
+      - |
+        MGMT_IP="$(yq e '.networks.mgmt.bridge_ip' {{.CONFIG_FILE}})"
+        ssh -F {{.ROOT_DIR}}/state/ssh_config admin "sudo mount.nfs4 -V &>/dev/null || sudo apk add nfs-utils"
+        ssh -F {{.ROOT_DIR}}/state/ssh_config admin "sudo mkdir -p /mnt/nfs-test && sudo mount -t nfs4 ${MGMT_IP}:/backup_target /mnt/nfs-test"
+        ssh -F {{.ROOT_DIR}}/state/ssh_config admin "sudo touch /mnt/nfs-test/.mount-test && sudo rm /mnt/nfs-test/.mount-test && sudo umount /mnt/nfs-test"
+        echo "NFS mount test OK"
   generate-macs:
     desc: Generate MAC addresses for nodes and update config file
     cmds:
