@@ -193,6 +193,16 @@ Edit `config.yaml` as needed (node count, CPU, memory), then start the cluster:
 task up
 ```
 
+> [!NOTE]
+> To use external artifacts instead of the local artifact server, set `.admin.egress_enabled: true` and point these fields to external URLs:
+> ```
+> harvester_iso_url:
+> harvester_kernel_url:
+> harvester_ramdisk_url:
+> harvester_rootfs_url:
+> ```
+> This enables egress on the admin node, so the environment is no longer air-gapped.
+
 ## Usage
 
 **Kubernetes access** — a `kubeconfig` file is created in the project root after the cluster is up.

@@ -88,4 +88,26 @@ locals {
       }
     ]
   ])
+
+  # Transform extra_nodes array into a map keyed by node name, enabled nodes only
+  extra_nodes = {
+    for node in try(local.config.extra_nodes, []) : node.name => {
+      name           = "${local.prefix}-${node.name}"
+      cpu            = try(node.cpu, 2)
+      memory         = try(node.memory, 4)
+      image_vol_size = node.image_vol_size
+      password       = try(node.password, "")
+      user           = try(node.user, "ubuntu")
+      running        = try(node.running, false)
+      network_config = try(node.network_config, null)
+      image_url = (
+        startswith(node.image_url, "http://")  ||
+        startswith(node.image_url, "https://") ||
+        startswith(node.image_url, "/")
+        ? node.image_url
+        : abspath("${local.project_dir}/${node.image_url}")
+      )
+    }
+    if try(node.enabled, true)
+  }
 }

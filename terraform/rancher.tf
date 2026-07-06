@@ -106,7 +106,7 @@ resource "libvirt_domain" "harvester-dev-rancher" {
     type_machine = "q35"
   }
 
-  running = false
+  running = try(local.config.rancher.running, false)
 
   devices = {
 

@@ -6,19 +6,29 @@ YQ_SHA256="b4077cab0f9ee5ce8381e602d090daa69a0afb7e57eb9a5b20e9cb416d7f6794"
 YQ_URL="https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_linux_amd64.tar.gz"
 INSTALL_DIR="${HOME}/bin"
 
-if command -v yq &>/dev/null; then
-    echo "yq is already installed: $(command -v yq)"
-    exit 0
-fi
+FORCE=false
+for arg in "$@"; do
+    case "${arg}" in
+        --force) FORCE=true ;;
+        *) echo "Unknown option: ${arg}" >&2; exit 1 ;;
+    esac
+done
 
-read -r -p "yq was not found in PATH. Install yq v${YQ_VERSION} to ${INSTALL_DIR}? [y/N] " answer
-case "${answer}" in
-    [yY][eE][sS]|[yY]) ;;
-    *)
-        echo "Aborted."
-        exit 1
-        ;;
-esac
+if command -v yq &>/dev/null; then
+    if [[ "${FORCE}" == false ]]; then
+        echo "yq is already installed: $(command -v yq)"
+        exit 0
+    fi
+elif [[ "${FORCE}" == false ]]; then
+    read -r -p "yq was not found in PATH. Install yq v${YQ_VERSION} to ${INSTALL_DIR}? [y/N] " answer
+    case "${answer}" in
+        [yY][eE][sS]|[yY]) ;;
+        *)
+            echo "Aborted."
+            exit 1
+            ;;
+    esac
+fi
 
 mkdir -p "${INSTALL_DIR}"
 

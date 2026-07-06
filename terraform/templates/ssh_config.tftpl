@@ -31,3 +31,13 @@ Host node${idx + 1}
     IdentityFile ${ssh_key_path}
 
 %{ endfor ~}
+# Extra nodes
+%{ for name, node in extra_nodes ~}
+%{ if lookup(extra_node_ips, name, null) != null ~}
+Host ${name}
+    HostName ${extra_node_ips[name]}
+    User ${node.user}
+    IdentityFile ${ssh_key_path}
+
+%{ endif ~}
+%{ endfor ~}
