@@ -98,7 +98,7 @@ rancher:
   version: v2.14.0
   bootstrap_password: password
   admin_password: "password1234"
-  hostname: rancher.10.0.20.5.sslip.io
+  hostname: rancher.10.0.10.5.sslip.io
 ##############################################################################
 # Harvester nodes
 ##############################################################################
@@ -190,7 +190,7 @@ harvester:
   # containerd-registry setting. Note this is applied only when calling `harvester-configure-registries` task
   registry_mirrors:
     - registry: docker.io
-      endpoint: http://10.0.20.1:5000
+      endpoint: http://10.0.10.1:5000
 ##############################################################################
 # Guest clusters
 ##############################################################################
@@ -253,7 +253,7 @@ tests:
   upgrade:
     skip_version_check: true
     parallel_preload: true    
-    iso_url: http://10.0.20.1/harvester/harvester.iso
+    iso_url: http://10.0.10.1/harvester/harvester.iso
 ##############################################################################
 # ISO boot nodes
 ##############################################################################
