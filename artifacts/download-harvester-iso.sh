@@ -7,7 +7,6 @@ BASE_URL=$(yq -e '.harvester_release_url' "$CONFIG_FILE")
 
 # Configuration
 DOWNLOADS_DIR="$SCRIPT_DIR/isos"
-DEST_DIR="/srv/www/htdocs/harvester"  # Change this variable as needed
 
 # Get version from argument or use default
 VERSION="${1:-master}"

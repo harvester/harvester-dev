@@ -94,19 +94,25 @@ domain_disks() {
     }')
 }
 
-# Directory holding the golden masters. When GOLDEN_VERSION is set, masters
-# live under a per-version subdir so multiple versions can coexist; unset keeps
-# the legacy flat layout directly under GOLDEN_DIR.
-golden_dir() {
-  if [[ -n "${GOLDEN_VERSION:-}" ]]; then
-    printf '%s/%s' "$GOLDEN_DIR" "$GOLDEN_VERSION"
-  else
-    printf '%s' "$GOLDEN_DIR"
-  fi
+# Resolve base_dir/repo_id from config.yaml (.golden.*). Private helper.
+# repo_id defaults to .provider.domain_prefix; override with .golden.repo_id.
+_golden_root() {
+  local base_dir repo_id
+  base_dir=$(yq -e '.golden.base_dir // "/var/lib/libvirt/images/golden"' "$CONFIG_FILE")
+  repo_id=$(yq -e '.golden.repo_id // .provider.domain_prefix' "$CONFIG_FILE")
+  printf '%s/%s' "$base_dir" "$repo_id"
 }
 
-# Path of the read-only golden master for a given node + disk target.
-golden_path() { printf '%s/%s__%s.qcow2' "$(golden_dir)" "$1" "$2"; }
+# Base golden directory (no version); use when operating across all versions.
+golden_base_dir() { _golden_root; }
+
+# Directory holding the golden masters for a given version.
+# Usage: golden_dir <version>
+golden_dir() { printf '%s/%s' "$(_golden_root)" "$1"; }
+
+# Path of the golden image path of a node disk
+# Usage: golden_node_disk_path <node> <target> <version>
+golden_node_disk_path() { printf '%s/%s__%s.qcow2' "$(golden_dir "$3")" "$1" "$2"; }
 
 # Coordinated graceful shutdown of every node; block until all are "shut off".
 coordinated_shutdown() {
@@ -365,11 +371,13 @@ libvirt_destroy_domain() {
   fi
   
   # Check if domain exists and get its state
-  local state=$(virsh domstate "$domain_name" 2>/dev/null || echo "not-found")
-  
+  local state
+  state=$(virsh domstate "$domain_name" 2>/dev/null || echo "not-found")
+  state=$(echo "$state" | tr -d '\n')
+
   if [ "$state" = "not-found" ]; then
-    echo "Error: Domain $domain_name not found" >&2
-    return 1
+    echo "Warning: Domain $domain_name not found" >&2
+    return 0
   elif [ "$state" = "shut off" ]; then
     echo "Domain $domain_name is already shut off, skipping..."
     return 0

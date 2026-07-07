@@ -10,9 +10,17 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 source "$SCRIPT_DIR/../lib.sh"
 source "$SCRIPT_DIR/../config.sh"
 
-# Version tag for this golden set; masters are written under $GOLDEN_DIR/<version>.
+TIMESTAMP=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --timestamp) TIMESTAMP="$2"; shift 2 ;;
+    *) break ;;
+  esac
+done
+
+# Version tag for this golden set; files are written under $GOLDEN_DIR/REPO_ID/<version>.
 GOLDEN_VERSION="${1:-}"
-[[ -n "$GOLDEN_VERSION" ]] || die "usage: $(basename "$0") <version>  (e.g. v1.8)"
+[[ -n "$GOLDEN_VERSION" ]] || die "usage: $(basename "$0") [--timestamp TS] <version>  (e.g. v1.8)"
 
 require_cmd "$VIRSH" "$QEMU_IMG"
 # Instead of requiring root: confirm we can reach libvirt now, and (per disk, in
@@ -23,7 +31,7 @@ for n in "${NODES[@]}"; do
   domain_exists "$n" || die "domain not found: $n"
 done
 
-mkdir -p "$(golden_dir)"
+mkdir -p "$(golden_dir "$GOLDEN_VERSION")"
 
 # 1) etcd consistency: all three nodes must be cleanly shut down *together*
 #    before we read their disks, so the captured etcd revisions are aligned.
@@ -44,7 +52,7 @@ for n in "${NODES[@]}"; do
   log "working with node $n"
   while read -r target src; do
     [[ -n "$target" ]] || continue
-    g=$(golden_path "$n" "$target")
+    g=$(golden_node_disk_path "$n" "$target" "$GOLDEN_VERSION")
     [[ -f "$src" ]] || die "source disk missing: $src"
     require_readable "$src"
     require_writable_dir "$g"
@@ -60,5 +68,7 @@ cluster, not after boot-from-golden (refusing to copy an overlay)"
   done < <(domain_disks "$n")
 done
 
-log "golden masters (version $GOLDEN_VERSION) written to $(golden_dir) (read-only)."
+[[ -z "$TIMESTAMP" ]] || echo "$TIMESTAMP" > "$(golden_dir "$GOLDEN_VERSION")/timestamp"
+
+log "golden masters (version $GOLDEN_VERSION) written to $(golden_dir "$GOLDEN_VERSION") (read-only)."
 log "source cluster left shut off. done."

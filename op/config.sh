@@ -33,10 +33,6 @@ fi
 
 # --- paths / tools ----------------------------------------------------------
 
-# Read-only golden masters live here. Kept under the default libvirt image dir
-# so qemu/AppArmor can read them as backing files without extra profile rules.
-GOLDEN_DIR=${GOLDEN_DIR:-/var/lib/libvirt/images/golden}
-
 VIRSH=${VIRSH:-virsh}
 QEMU_IMG=${QEMU_IMG:-qemu-img}
 

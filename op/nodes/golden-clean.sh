@@ -11,7 +11,11 @@ source "$SCRIPT_DIR/../config.sh"
 
 # Optional version: clean only $GOLDEN_DIR/<version>; omit to clean everything.
 GOLDEN_VERSION="${1:-}"
-target="$(golden_dir)"
+if [[ -n "$GOLDEN_VERSION" ]]; then
+  target="$(golden_dir "$GOLDEN_VERSION")"
+else
+  target="$(golden_base_dir)"
+fi
 
 if [[ ! -d "$target" ]]; then
   log "no golden dir at $target (nothing to clean)"
