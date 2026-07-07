@@ -63,7 +63,7 @@ resource "libvirt_volume" "admin_disk" {
 }
 
 resource "libvirt_cloudinit_disk" "admin_cloudinit" {
-  name = "admin-cloudinit.iso"
+  name = "${local.prefix}-admin-cloudinit.iso"
 
   user_data = templatefile("${path.module}/templates/admin/user_data-alpine.yaml.tftpl", {
     vm_password = var.admin_vm_password
@@ -94,7 +94,7 @@ resource "libvirt_cloudinit_disk" "admin_cloudinit" {
 }
 
 resource "libvirt_volume" "admin_cloudinit_disk" {
-  name   = "admin-cloudinit-disk"
+  name   = "${local.prefix}-admin-cloudinit-disk"
   pool   = "default"
   target = {
     format = {

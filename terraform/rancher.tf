@@ -58,7 +58,7 @@ resource "libvirt_volume" "rancher_disk" {
 
 resource "libvirt_cloudinit_disk" "rancher_cloudinit" {
   count = local.rancher_enabled ? 1 : 0
-  name  = "rancher-cloudinit.iso"
+  name  = "${local.prefix}-rancher-cloudinit.iso"
 
   user_data = templatefile("${path.module}/templates/rancher/user_data-debian.yaml.tftpl", {
     vm_password            = var.rancher_vm_password
