@@ -5,5 +5,5 @@ Description=Refresh Golden ISOs
 Type=oneshot
 User=github
 WorkingDirectory=/home/github/harvester-dev
-ExecStart=-/home/github/harvester-dev/artifacts/download-golden-iso.sh master "/home/github/harvester-dev/artifacts/iso/golden"
-ExecStart=-/home/github/harvester-dev/artifacts/download-golden-iso.sh v1.9 "/home/github/harvester-dev/artifacts/iso/golden"
+ExecStart=-/home/github/harvester-dev/artifacts/download-golden-iso.sh master "/home/github/harvester-dev/artifacts/isos/golden"
+ExecStart=-/home/github/harvester-dev/artifacts/download-golden-iso.sh v1.9 "/home/github/harvester-dev/artifacts/isos/golden"
