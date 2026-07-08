@@ -5,6 +5,7 @@ Check the main [README.md](../README.md) for how to bring a Harvester clusters l
 ## Nodes Tasks - Manage nodes
 
 - [op:iso-boot-nodes-start](./nodes/iso-nodes.md) - Create VMs that boot from Harvesetr ISO directly. Useful if you want to test the manually ISO interative installation.
+- [op:nodes-golden-*][./nodes/golden.md] - Save VMs as golden images and restore them when needed.
 
 ## Harvester Tasks - Manage Harvester clusters
 
