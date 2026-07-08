@@ -1,0 +1,9 @@
+[Unit]
+Description=Run Golden ISO refresh periodically
+
+[Timer]
+OnCalendar=*-*-* 00:00:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target
