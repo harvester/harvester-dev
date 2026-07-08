@@ -46,7 +46,7 @@ resource "libvirt_volume" "extra_node_disk" {
 resource "libvirt_cloudinit_disk" "extra_node_cloudinit" {
   for_each = local.extra_nodes
 
-  name = "${each.value.name}-cloudinit.iso"
+  name = "${local.prefix}-${each.value.name}-cloudinit.iso"
 
   user_data = templatefile("${path.module}/templates/extra/user_data.yaml.tftpl", {
     vm_password = each.value.password

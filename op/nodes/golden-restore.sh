@@ -39,7 +39,7 @@ log "step:  recreating overlays from golden"
 for n in "${NODES[@]}"; do
   while read -r target src; do
     [[ -n "$target" ]] || continue
-    g=$(golden_path "$n" "$target")
+    g=$(golden_node_disk_path "$n" "$target" "$GOLDEN_VERSION")
     [[ -f "$g" ]] || die "golden missing for $n/$target: $g (run nodes:create-golden first)"
     require_readable "$g"
     require_writable_dir "$src"

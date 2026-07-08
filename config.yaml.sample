@@ -16,6 +16,12 @@ harvester_kernel_url: http://10.0.10.1:8787/isos/harvester-master/harvester-mast
 harvester_ramdisk_url: http://10.0.10.1:8787/isos/harvester-master/harvester-master-initrd-amd64
 harvester_rootfs_url: http://10.0.10.1:8787/isos/harvester-master/harvester-master-rootfs-amd64.squashfs
 ##############################################################################
+# Golden image configuration
+##############################################################################
+golden:
+  base_dir: /var/lib/libvirt/images/golden
+  # repo_id: ""   # optional override; defaults to .provider.domain_prefix
+##############################################################################
 # Artifacts
 ##############################################################################
 artifacts:
@@ -252,7 +258,7 @@ guest_clusters:
 tests:
   upgrade:
     skip_version_check: true
-    parallel_preload: true    
+    parallel_preload: true
     iso_url: http://10.0.10.1/harvester/harvester.iso
 ##############################################################################
 # ISO boot nodes
