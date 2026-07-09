@@ -7,7 +7,7 @@ SSH_CONFIG="$TOP_DIR/state/ssh_config"
 CONFIG=${CONFIG:-$(get_config_file)}
 KUBECONFIG=${KUBECONFIG:-"$TOP_DIR/kubeconfig"}
 
-ip_type=$(yq -e '.harvester.kubeconfig_server_ip_type' "$CONFIG")
+ip_type=$(yq '.harvester.kubeconfig_server_ip_type // "vip"' "$CONFIG")
 case "$ip_type" in
   vip)
     server_ip=$(yq -e '.vip' "$CONFIG")
