@@ -165,6 +165,9 @@ nodes:
     mgmt_interface: enp1s0
     role: default
     vnc_port: 5954
+node_hacks:
+  # https://github.com/harvester/harvester/issues/11122
+  ensure_vip_stable: false
 ##############################################################################
 # Harvester cluster
 ##############################################################################
