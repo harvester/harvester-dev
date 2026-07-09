@@ -188,6 +188,8 @@ harvester:
       image_url: https://download.opensuse.org/repositories/Cloud:/Images:/Leap_15.6/images/openSUSE-Leap-15.6.x86_64-NoCloud.qcow2
   private_key_path: state/keys/id_rsa
   pubkey_path: state/keys/id_rsa.pub
+  # vip or first_node
+  kubeconfig_server_ip_type: vip
   cluster_network:
     name: cluster-vlan
     uplink: enp2s0
