@@ -3,10 +3,10 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 source "$SCRIPT_DIR/../../lib.sh"
 TOP_DIR=$(get_top_dir)
 
-KUBECONFIG=${KUBECONFIG:-"$TOP_DIR/kubeconfig"}
+KUBECONFIG_FILE=$(get_kubeconfig_file)
 
-if [ ! -f "$KUBECONFIG" ]; then
-  echo "Error: kubeconfig file not found at $KUBECONFIG."
+if [ ! -f "$KUBECONFIG_FILE" ]; then
+  echo "Error: kubeconfig file not found at $KUBECONFIG_FILE."
   exit 1
 fi
 
@@ -19,6 +19,7 @@ fi
 
 echo "Enable parallel image preload.."
 
+export KUBECONFIG="$KUBECONFIG_FILE"
 kubectl apply -f - <<'EOF'
 apiVersion: harvesterhci.io/v1beta1
 kind: Setting

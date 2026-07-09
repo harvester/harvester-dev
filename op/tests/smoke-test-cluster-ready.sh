@@ -4,11 +4,11 @@ source "$SCRIPT_DIR/../lib.sh"
 TOP_DIR=$(get_top_dir)
 SMOKE_TEST_DIR=$(get_smoke_tests_dir)
 
-CONFIG=${CONFIG:-$(get_config_file)}
-KUBECONFIG=${KUBECONFIG:-"$TOP_DIR/kubeconfig"}
+CONFIG=$(get_config_file)
+KUBECONFIG_FILE=$(get_kubeconfig_file)
 
-if [ ! -f "$KUBECONFIG" ]; then
-  echo "Error: kubeconfig file not found at $KUBECONFIG."
+if [ ! -f "$KUBECONFIG_FILE" ]; then
+  echo "Error: kubeconfig file not found at $KUBECONFIG_FILE."
   exit 1
 fi
 
@@ -44,4 +44,4 @@ set -x
 cd "$SMOKE_TEST_DIR"
 go test -v -count 1 -timeout 4h ./pkg/cluster -run TestClusterReady \
   -clusterconfig $cluster_config \
-  -kubeconfig $KUBECONFIG
+  -kubeconfig $KUBECONFIG_FILE

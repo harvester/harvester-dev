@@ -1,18 +1,17 @@
 #!/bin/bash -e
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 source "$SCRIPT_DIR/../lib.sh"
-TOP_DIR=$(get_top_dir)
 
-KUBECONFIG=${KUBECONFIG:-"$TOP_DIR/kubeconfig"}
+KUBECONFIG_FILE=$(get_kubeconfig_file)
 CLUSTER_NAME=${CLUSTER_NAME:-"local"}
 CLUSTER_NAMESPACE=${CLUSTER_NAMESPACE:-"fleet-local"}
 
-if [ ! -f "$KUBECONFIG" ]; then
-  echo "Error: kubeconfig file not found at $KUBECONFIG."
+if [ ! -f "$KUBECONFIG_FILE" ]; then
+  echo "Error: kubeconfig file not found at $KUBECONFIG_FILE."
   exit 1
 fi
 
-export KUBECONFIG
+export KUBECONFIG="$KUBECONFIG_FILE"
 
 echo "Fetching current provisionGeneration..."
 CURRENT_PROVISION_GEN=$(kubectl get cluster.provisioning.cattle.io "$CLUSTER_NAME" -n "$CLUSTER_NAMESPACE" -o jsonpath='{.spec.rkeConfig.provisionGeneration}')
