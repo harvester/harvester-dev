@@ -46,6 +46,15 @@ for ((node_idx=0; node_idx<NODE_COUNT; node_idx++)); do
   echo ""
 done
 
+# Generate a MAC address for the VIP
+NEW_VIP_MAC=$(generate_mac)
+OLD_VIP_MAC=$(yq ".vip_mac" "$CONFIG_FILE")
+
+echo "VIP: $OLD_VIP_MAC -> $NEW_VIP_MAC"
+
+sed -i "0,/$OLD_VIP_MAC/s/$OLD_VIP_MAC/$NEW_VIP_MAC/" "$TMP_FILE"
+echo ""
+
 # Move the temporary file back to the original
 mv "$TMP_FILE" "$CONFIG_FILE"
 
