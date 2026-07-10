@@ -26,7 +26,7 @@ task op:nodes-golden-create -- --timestamp TS VERSION
 > Golden images are stored under `<base_dir>/<repo_id>/<version>`:
 > - `base_dir` defaults to `/var/lib/libvirt/images/golden`. Override it with `.golden.base_dir` in `config.yaml`.
 > - `repo_id` isolates golden images per cluster and defaults to `.provider.domain_prefix`. Override it with `.golden.repo_id` in `config.yaml`.
-> - You must ensure the user you are using has permission to create folders and files under the golden base directory. A quick guide is to add the current user to the group which generally owns libvirt images (for example, the `libvirt` group), and change the directory mode of `/var/lib/libvirt/images` with `chmod u=rwx,g=rws,o=rx /var/lib/libvirt/images`.
+> - You must ensure the user you are using has permission to create folders and files under the golden base directory. A quick guide is to add the current user to the group which generally owns libvirt images (for example, the `libvirt` group), and change the directory mode of `/var/lib/libvirt/images` with `chmod u=rwx,g=rwxs,o=rx /var/lib/libvirt/images`.
 
 
 ## Restore
