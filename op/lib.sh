@@ -230,6 +230,11 @@ get_config_file() {
   echo "$(get_top_dir)/config.yaml"
 }
 
+# Get the kubeconfig file path
+get_kubeconfig_file() {
+  echo "$(get_top_dir)/kubeconfig"
+}
+
 # Get the harvester-smoke directory path
 get_smoke_tests_dir() {
   echo "$(get_top_dir)/harvester-smoke"

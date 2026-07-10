@@ -5,8 +5,7 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/../lib.sh"
 
-TOP_DIR=$(get_top_dir)
-KUBECONFIG="${KUBECONFIG:-${TOP_DIR}/kubeconfig}"
+KUBECONFIG_FILE=$(get_kubeconfig_file)
 
 if [ $# -ne 2 ]; then
   echo "Usage: $(basename "$0") <REPOSITORY> <TAG>" >&2
@@ -16,12 +15,12 @@ fi
 REPOSITORY="$1"
 TAG="$2"
 
-if [ ! -f "$KUBECONFIG" ]; then
-  echo "Error: kubeconfig not found at $KUBECONFIG — run 'task op:nodes-get-kubeconfig' first" >&2
+if [ ! -f "$KUBECONFIG_FILE" ]; then
+  echo "Error: kubeconfig not found at $KUBECONFIG_FILE — run 'task op:nodes-get-kubeconfig' first" >&2
   exit 1
 fi
 
-export KUBECONFIG
+export KUBECONFIG="$KUBECONFIG_FILE"
 
 
 patch_managed_chart() {

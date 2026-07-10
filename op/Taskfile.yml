@@ -120,6 +120,7 @@ tasks:
       - task: nodes-first-boot
       - task: nodes-start
       - ./nodes/wait-vip.sh
+      - ./nodes/vip-ensure-stable.sh
       - task: nodes-rke2-env
       - task: test-cluster-ready
       - task: harvester-change-default-password

@@ -12,10 +12,9 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/../lib.sh"
 
-TOP_DIR=$(get_top_dir)
 CONFIG_FILE=$(get_config_file)
-KUBECONFIG="${TOP_DIR}/kubeconfig"
-KUBECTL="kubectl --kubeconfig ${KUBECONFIG}"
+KUBECONFIG_FILE=$(get_kubeconfig_file)
+KUBECTL="kubectl --kubeconfig ${KUBECONFIG_FILE}"
 
 MIRROR_COUNT=$(yq -e '.harvester.registry_mirrors | length' "$CONFIG_FILE")
 
