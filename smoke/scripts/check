@@ -1,0 +1,7 @@
+#!/bin/bash -e
+
+TOP_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd )"
+cd $TOP_DIR
+
+echo "Running golangci-lint..."
+golangci-lint run

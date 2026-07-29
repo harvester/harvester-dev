@@ -1,0 +1,15 @@
+#!/bin/bash -e
+
+TOP_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd )"
+cd $TOP_DIR
+
+APP_PREFIX=harvester-smoke-
+
+# Default to short git hash if VERSION not set
+if [ -z "$VERSION" ]; then
+    VERSION=$(git rev-parse --short HEAD 2>/dev/null || echo "dev")
+fi
+
+echo "Building binary with version: $VERSION"
+go test -c ./pkg/cluster -o bin/${APP_PREFIX}cluster -ldflags "-X github.com/harvester/harvester-smoke/pkg/version.Version=$VERSION"
+go test -c ./pkg/upgrade -o bin/${APP_PREFIX}upgrade -ldflags "-X github.com/harvester/harvester-smoke/pkg/version.Version=$VERSION"

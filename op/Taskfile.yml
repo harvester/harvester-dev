@@ -268,9 +268,8 @@ tasks:
   test-cluster-ready:
     desc: Verify the Harvester cluster is ready
     cmds:
-      - ./tests/smoke-test-cluster-ready.sh
+      - ./tests/smoke-cluster-ready.sh
   test-cluster-upgrade:
     desc: Verify the Harvester cluster can be upgraded successfully
     cmds:
-      - ./tests/smoke-test-upgrade.sh
-
+      - ./tests/smoke-upgrade.sh
