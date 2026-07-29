@@ -68,7 +68,7 @@ mkdir -p "$VERSION_DIR"
 REMOTE_CHECKSUM_URL="${BASE_URL}/${VERSION}/harvester-${VERSION}-amd64.sha512"
 last_modified=$(curl -fsSI "$REMOTE_CHECKSUM_URL" \
     | grep -i "^last-modified:" | cut -d' ' -f2- | tr -d '\r')
-REMOTE_TIMESTAMP=$(date -d "$last_modified" "+%Y%m%dT%H%M%SZ")
+REMOTE_TIMESTAMP=$(date -u -d "$last_modified" "+%Y%m%dT%H%M%SZ")
 echo "Remote timestamp of $REMOTE_CHECKSUM_URL: ${REMOTE_TIMESTAMP}" >&2
 
 if [[ -f "${VERSION_DIR}/${REMOTE_TIMESTAMP}/checked" ]]; then
