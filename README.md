@@ -134,7 +134,7 @@ sudo firewall-cmd --reload
 ### 3. Clone the repo
 
 ```bash
-git clone --recurse-submodules https://github.com/harvester/harvester-dev
+git clone https://github.com/harvester/harvester-dev
 cd harvester-dev
 ```
 
