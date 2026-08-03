@@ -42,6 +42,104 @@ firewall_backend = "iptables"
 Somehow nftables doesn't work very well.
 
 
+## Node VMs can't get DHCP / PXE from the admin node (br_netfilter)
+
+Node VMs boot into PXE but never get an IP from the admin node's dnsmasq — the leases
+file on the admin node (`/var/lib/misc/dnsmasq.leases`) stays empty, and the libvirt
+firewall backend fix above doesn't help.
+
+A common root cause is the `br_netfilter` kernel module. When it's loaded and
+`net.bridge.bridge-nf-call-iptables=1`, bridged (L2) traffic on `hvst-mgmt` /
+`hvst-data` is pushed through iptables/nftables, and DHCP broadcasts
+(`0.0.0.0` → `255.255.255.255`) can be silently dropped by a `FORWARD` DROP policy or
+docker-inserted rules. This is common on hosts that also run docker or Kubernetes,
+since those load `br_netfilter` and enable the sysctl. If your host runs docker, test
+this first before digging into firewalld/UFW rules.
+
+### Diagnose
+
+Check whether the module is loaded and who configures it:
+
+```bash
+lsmod | grep br_netfilter
+grep -rn br_netfilter /etc/modules-load.d/ /etc/sysctl.d/ /etc/sysconfig/ 2>/dev/null
+sysctl net.bridge.bridge-nf-call-iptables
+```
+
+Watch DHCP on the admin VM's tap device while resetting a node:
+
+```bash
+sudo tcpdump -i <admin-vnet> -n port 67 or port 68   # on the host
+virsh reset hvst-node1                               # in another terminal
+```
+
+Seeing DHCP DISCOVER on the tap device means L2 is fine and the packets are dropped by
+netfilter. Seeing nothing at all is a different problem — check L2 flooding with
+`bridge fdb show`.
+
+To confirm the root cause, temporarily disable the bridge netfilter hooks and retry:
+
+```bash
+sudo sysctl net.bridge.bridge-nf-call-iptables=0
+sudo sysctl net.bridge.bridge-nf-call-ip6tables=0
+sudo sysctl net.bridge.bridge-nf-call-arptables=0
+```
+
+### Fix
+
+First check whether the host itself runs Kubernetes components — this decides which fix
+is safe:
+
+```bash
+systemctl list-units --type=service | grep -iE 'rke2|k3s|kubelet'
+```
+
+**Pure lab host (no K8s/RKE2/kubelet)** — persist the sysctls, e.g. in
+`/etc/sysctl.d/99-hvst-bridge.conf`:
+
+```
+net.bridge.bridge-nf-call-iptables = 0
+net.bridge.bridge-nf-call-ip6tables = 0
+net.bridge.bridge-nf-call-arptables = 0
+```
+
+Also pin the module load. `sysctl --system` runs early during boot; if `br_netfilter`
+is not loaded yet, the keys don't exist and the settings are silently skipped — after a
+reboot you're back to square one:
+
+```bash
+echo br_netfilter | sudo tee /etc/modules-load.d/br_netfilter.conf
+```
+
+**Host also running K8s/RKE2** — do NOT disable `bridge-nf-call-*` globally. kubelet
+and the CNI need it enabled and will flip it back on startup anyway. Keep it at `1` and
+explicitly allow DHCP on the bridge instead. Find which rule is dropping first (watch
+which counter grows while a node retries DHCP):
+
+```bash
+sudo iptables -L FORWARD -n -v | grep -iE 'DROP|policy'
+sudo nft list ruleset | grep -iE 'drop|reject|policy'
+```
+
+Then insert an accept rule for the bridge, e.g. with docker installed:
+
+```bash
+sudo iptables -I DOCKER-USER -i hvst-mgmt -o hvst-mgmt -p udp --dport 67:68 -j ACCEPT
+```
+
+> [!NOTE]
+> The K8s/RKE2 host approach above is not verified yet — it follows the expected
+> direction but hasn't been tested in a real environment. If you go through this path,
+> please verify and update this section.
+
+### Notes
+
+- firewalld's `trusted` zone does not cover the nftables rules docker inserts, so
+  adding the bridge to the trusted zone may appear to have no effect.
+- On UFW hosts, forward rules for UDP 67/68 must not be bound to the DHCP server IP —
+  DISCOVER is sent from `0.0.0.0` to `255.255.255.255` and would be silently blocked.
+
+
 ## Libvirt Network can't be created
 
 See ing this error when creating a network:
