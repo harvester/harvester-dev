@@ -27,7 +27,7 @@ golden:
 artifacts:
   images:
     - name: alpine-admin.img
-      url: https://github.com/bk201/alpine-cloud-images/releases/download/20260704/3.24.1-x86_64-bios-cloudinit-vm-generic-20260704.img.gz
+      url: https://github.com/bk201/alpine-cloud-images/releases/download/20260808/3.24.1-x86_64-bios-cloudinit-vm-generic-20260808.img.gz
     - name: noble-server-cloudimg-amd64.img
       url: http://cloud-images.ubuntu.com/noble/20260615/noble-server-cloudimg-amd64.img
     - name: openSUSE-Leap-15.6.x86_64-NoCloud.qcow2
