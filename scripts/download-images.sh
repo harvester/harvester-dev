@@ -39,6 +39,7 @@ download_image() {
         curl -fSL "$url" -o "$tmp"
     fi
     mv "$tmp" "$dest"
+    chmod 644 "$dest"
 
     if [[ -n "$server_lm" ]]; then
         printf '%s' "$server_lm" > "$lm_file"
