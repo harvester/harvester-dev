@@ -57,6 +57,8 @@ for i in $(seq 1 "${#NODES[@]}"); do
   done
 done
 
+sleep 5
+
 # step3: re-probe
 log "re-probing VIP"
 "$SCRIPT_DIR/vip-probe.sh" || die "VIP still unstable after workaround"
