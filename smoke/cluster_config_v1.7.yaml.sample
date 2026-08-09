@@ -1,0 +1,110 @@
+# Cluster readiness test configuration
+# This file configures the expected resources for cluster readiness validation
+
+# VIP address of the cluster (for initial connectivity check)
+vip: 10.10.0.100
+
+# Total number of nodes expected in the cluster
+nodeCount: 3
+
+# Number of nodes with control-plane role
+controllerCount: 3
+
+# Number of nodes with etcd role
+etcdCount: 3
+
+# Expected deployments to be present and ready (format: "namespace/name")
+# The test will warn if unexpected deployments are found
+expectedDeployments:
+#  - cattle-capi-system/capi-controller-manager
+  - harvester-system/cdi-apiserver
+  - harvester-system/cdi-deployment
+  - harvester-system/cdi-operator
+  - harvester-system/cdi-uploadproxy
+  - longhorn-system/csi-attacher
+  - longhorn-system/csi-provisioner
+  - longhorn-system/csi-resizer
+  - longhorn-system/csi-snapshotter
+  - cattle-fleet-local-system/fleet-agent
+  - cattle-fleet-system/fleet-controller
+  - cattle-fleet-system/gitjob
+  - harvester-system/harvester
+  - cattle-system/harvester-cluster-repo
+  - harvester-system/harvester-load-balancer
+  - harvester-system/harvester-load-balancer-webhook
+  - harvester-system/harvester-network-controller-manager
+  - harvester-system/harvester-network-webhook
+  - harvester-system/harvester-node-disk-manager-webhook
+  - harvester-system/harvester-node-manager-webhook
+  - harvester-system/harvester-webhook
+  - cattle-fleet-system/helmops
+  - longhorn-system/longhorn-driver-deployer
+  - longhorn-system/longhorn-ui
+  - cattle-system/rancher
+#  - cattle-turtles-system/rancher-turtles-controller-manager
+  - cattle-system/rancher-webhook
+  - kube-system/rke2-coredns-rke2-coredns
+  - kube-system/rke2-coredns-rke2-coredns-autoscaler
+  - kube-system/rke2-metrics-server
+  - kube-system/snapshot-controller
+  - cattle-system/system-upgrade-controller
+  - harvester-system/virt-api
+  - harvester-system/virt-controller
+  - harvester-system/virt-operator
+  - kube-system/whereabouts-controller
+
+# Expected daemonsets to be present and ready (format: "namespace/name")
+expectedDaemonSets:
+#  - longhorn-system/engine-image-ei-ff1cedad
+  - harvester-system/harvester-network-controller
+  - harvester-system/harvester-networkfs-manager
+  - harvester-system/harvester-node-disk-manager
+  - harvester-system/harvester-node-manager
+  - kube-system/harvester-whereabouts
+  - harvester-system/kube-vip
+  - longhorn-system/longhorn-csi-plugin
+  - longhorn-system/longhorn-manager
+  - kube-system/rke2-canal
+  - kube-system/rke2-ingress-nginx-controller
+  - kube-system/rke2-multus
+  - harvester-system/virt-handler
+
+# Expected managed charts to be present and ready (format: "namespace/name")
+expectedManagedCharts:
+  - fleet-local/harvester
+  - fleet-local/harvester-crd
+  - fleet-local/kubeovn-operator-crd
+  - fleet-local/rancher-logging-crd
+  - fleet-local/rancher-monitoring-crd
+
+# Expected KubeVirt resources to be present and ready (format: "namespace/name")
+expectedKubeVirts:
+  - harvester-system/kubevirt
+
+# Deployment replica rules for clusters with multiple nodes
+# Deployment replica rules (optional, defaults are built-in)
+# Defines expected replica counts for deployments that scale with cluster size
+# If not specified, deployments default to 1 replica
+# 
+# IMPORTANT: Keys must use "namespace/name" format
+# 
+# Format:
+#   namespace/deploymentName:
+#     scaleWith: "node" or "controller"  # What to scale with (default examples use "node")
+#     minReplicas: N                      # Minimum replicas
+#     maxReplicas: N                      # Maximum replicas
+#
+# Example rules (defaults are built-in, uncomment to customize):
+# deploymentReplicaRules:
+#   harvester-system/harvester:
+#     scaleWith: "node"
+#     minReplicas: 1
+#     maxReplicas: 3
+#   cattle-system/rancher:
+#     scaleWith: "node"
+#     minReplicas: 1
+#     maxReplicas: 3
+#   harvester-system/virt-api:
+#     scaleWith: "node"
+#     minReplicas: 1
+#     maxReplicas: 2

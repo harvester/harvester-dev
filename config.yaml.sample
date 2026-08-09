@@ -261,6 +261,8 @@ guest_clusters:
 # Tests
 ##############################################################################
 tests:
+  #cluster:
+  #  branch: "test"
   upgrade:
     skip_version_check: true
     parallel_preload: true

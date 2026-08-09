@@ -223,6 +223,10 @@ tasks:
       - touch {{.STATE_DIR}}/harvester_changed_default_password
     status:
       - test -f {{.STATE_DIR}}/harvester_changed_default_password
+  harvester-get-versions:
+    desc: Get the Harvester versions
+    cmds:
+      - ./harvester/get-versions.sh {{.STATE_DIR}}/versions.yaml
   harvester-bootstrap:
     desc: Create Networks, VirtualMachineImages, and VirtualMachines
     deps: [harvester-init-tf]
@@ -268,6 +272,7 @@ tasks:
   test-cluster-ready:
     desc: Verify the Harvester cluster is ready
     cmds:
+      - task: harvester-get-versions
       - ./tests/smoke-cluster-ready.sh
   test-cluster-upgrade:
     desc: Verify the Harvester cluster can be upgraded successfully

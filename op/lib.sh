@@ -629,3 +629,27 @@ ssh_exec() {
   ssh -F "$ssh_config" "$hostname" "$command"
   return $?
 }
+
+# Get the osImage of the first node in the cluster.
+# Usage: get_first_node_os_image <kubeconfig_path>
+get_first_node_os_image() {
+  local kubeconfig="$1"
+  local first_node
+  first_node=$(kubectl get nodes --kubeconfig="$kubeconfig" \
+    -o jsonpath='{.items[0].metadata.name}' 2>/dev/null) || return 1
+
+  [[ -n "$first_node" ]] || return 1
+
+  kubectl get node "$first_node" --kubeconfig="$kubeconfig" \
+    -o jsonpath='{.status.nodeInfo.osImage}' 2>/dev/null
+}
+
+# Get a Harvester setting.
+# Usage: get_harvester_setting <setting_name> <kubeconfig_path>
+get_harvester_setting() {
+  local setting_name="$1"
+  local kubeconfig="$2"
+
+  kubectl get settings.harvesterhci.io "$setting_name" \
+    --kubeconfig="$kubeconfig" -o jsonpath='{.value}' 2>/dev/null
+}
