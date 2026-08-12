@@ -153,6 +153,10 @@ tasks:
     desc: SSH into VMs using generated SSH config. By default, it will ssh into admin node. Use `-- NODE` to specify a node, e.g. `task ssh -- node1`
     cmds:
       - ssh -F {{.ROOT_DIR}}/state/ssh_config {{if .CLI_ARGS}}{{.CLI_ARGS}}{{else}}admin{{end}}
+  node-count:
+    desc: Get or set the number of nodes in config.yaml. Use `-- N` to set the count, e.g. `task node-count -- 3`
+    cmds:
+      - ./op/nodes/node-count.sh {{.CLI_ARGS}}
 
 
 # tmp
