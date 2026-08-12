@@ -1,0 +1,109 @@
+addons:
+  - namespace: cattle-logging-system
+    name: rancher-logging
+    resources:
+      deployments:
+        - namespace: cattle-logging-system
+          name: rancher-logging
+      daemonsets:
+        - namespace: cattle-logging-system
+          name: rancher-logging-kube-audit-fluentbit
+        - namespace: cattle-logging-system
+          name: rancher-logging-rke2-journald-aggregator
+        - namespace: cattle-logging-system
+          name: rancher-logging-root-fluentbit
+      statefulsets:
+        - namespace: cattle-logging-system
+          name: harvester-default-event-tailer
+        - namespace: cattle-logging-system
+          name: rancher-logging-kube-audit-fluentd
+        - namespace: cattle-logging-system
+          name: rancher-logging-root-fluentd
+      pods: []
+  - namespace: cattle-monitoring-system
+    name: rancher-monitoring
+    resources:
+      deployments:
+        - namespace: cattle-monitoring-system
+          name: rancher-monitoring-grafana
+        - namespace: cattle-monitoring-system
+          name: rancher-monitoring-kube-state-metrics
+        - namespace: cattle-monitoring-system
+          name: rancher-monitoring-operator
+        - namespace: cattle-monitoring-system
+          name: rancher-monitoring-prometheus-adapter
+      daemonsets:
+        - namespace: cattle-monitoring-system
+          name: rancher-monitoring-prometheus-node-exporter
+        - namespace: cattle-monitoring-system
+          name: rancher-monitoring-windows-exporter
+      statefulsets:
+        - namespace: cattle-monitoring-system
+          name: alertmanager-rancher-monitoring-alertmanager
+        - namespace: cattle-monitoring-system
+          name: prometheus-rancher-monitoring-prometheus
+      pods: []
+  - namespace: harvester-system
+    name: harvester-seeder
+    resources:
+      deployments:
+        - namespace: harvester-system
+          name: harvester-seeder
+      daemonsets: []
+      statefulsets: []
+      pods: []
+  - namespace: harvester-system
+    name: nvidia-driver-toolkit
+    resources:
+      deployments: []
+      daemonsets: []
+      statefulsets: []
+      pods: []
+  - namespace: harvester-system
+    name: pcidevices-controller
+    resources:
+      deployments: []
+      daemonsets:
+        - namespace: harvester-system
+          name: harvester-pcidevices-controller
+      statefulsets: []
+      pods: []
+  - namespace: harvester-system
+    name: vm-import-controller
+    resources:
+      deployments:
+        - namespace: harvester-system
+          name: harvester-vm-import-controller
+      daemonsets: []
+      statefulsets: []
+      pods: []
+  - namespace: kube-system
+    name: descheduler
+    resources:
+      deployments:
+        - namespace: kube-system
+          name: descheduler
+      daemonsets: []
+      statefulsets: []
+      pods: []
+  - namespace: kube-system
+    name: kubeovn-operator
+    resources:
+      deployments:
+        - namespace: kube-system
+          name: kube-ovn-controller
+        - namespace: kube-system
+          name: kube-ovn-monitor
+        - namespace: kube-system
+          name: kube-ovn-webhook
+        - namespace: kube-system
+          name: kubeovn-operator-controller-manager
+      daemonsets:
+        - namespace: kube-system
+          name: kube-ovn-cni
+        - namespace: kube-system
+          name: kube-ovn-pinger
+        - namespace: kube-system
+          name: ovs-ovn
+      statefulsets: []
+      pods: []
