@@ -19,6 +19,7 @@ Check the main [README.md](../README.md) for how to bring a Harvester clusters l
 
 ## Tests
 
+- [op:test-addons-ready](tests/test-addons-ready.md) - enable addons and verify their related resources
 - [op:test-cluster-upgrade](tests/test-cluster-upgrade.md) - upgrade Harvester cluster
 
 ## Extra nodes
@@ -28,4 +29,3 @@ Check the main [README.md](../README.md) for how to bring a Harvester clusters l
 ## Troubleshooting
 
 - [Troubleshooting](troubleshooting.md) — common issues with libvirt, AppArmor/SELinux, networking, and domain management
-
