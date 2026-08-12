@@ -274,6 +274,10 @@ tasks:
     cmds:
       - task: harvester-get-versions
       - ./tests/smoke-cluster-ready.sh
+  test-addons-ready:
+    desc: Verify the Harvester addons are ready
+    cmds:
+      - ./tests/smoke-addons-ready.sh
   test-cluster-upgrade:
     desc: Verify the Harvester cluster can be upgraded successfully
     cmds:
