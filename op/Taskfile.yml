@@ -60,7 +60,7 @@ tasks:
     desc: Reset the Rancher VM to initial state and provisiong a new Rancher Manager
     cmds:
       - ./rancher/destroy.sh
-      - terraform -chdir={{.TF_DIR}} apply --auto-approve -replace 'libvirt_domain.harvester-dev-rancher[0]' -replace 'libvirt_volume.rancher_disk'
+      - terraform -chdir={{.TF_DIR}} apply --auto-approve -replace 'libvirt_domain.harvester-dev-rancher[0]' -replace 'libvirt_volume.rancher_disk[0]'
       - task: rancher-clean-state
       - task: rancher-install
   rancher-re-up:
