@@ -105,6 +105,12 @@ rancher:
   bootstrap_password: password
   admin_password: "password1234"
   hostname: rancher.10.0.10.5.sslip.io
+  extensions:
+    harvester-ui:
+      enabled: true
+      version: "1.8.2"
+      git_repo: "https://github.com/harvester/harvester-ui-extension"
+      git_branch: "gh-pages"
 ##############################################################################
 # Harvester nodes
 ##############################################################################
