@@ -48,7 +48,24 @@ wait_for_cluster_name() {
 
 get_registration_import_cmd() {
   local cluster_name="$1"
-  $KUBECTL get clusterregistrationtokens.management.cattle.io -n $cluster_name default-token -o yaml 2>/dev/null | yq -r .status.insecureCommand
+  local insecure_command
+  insecure_command=$($KUBECTL get clusterregistrationtokens.management.cattle.io -n $cluster_name default-token -o yaml 2>/dev/null | yq -r .status.insecureCommand)
+
+  # in newer Rancher (>= v2.15.0 time, including some patch releases to older minor versions))
+  # the insecureCommand now contains the placeholder '{token}' instead of the actual token, so we need to replace it with the actual token
+  # example of the insecureCommand: 'curl --insecure -sfL https://rancher.10.0.8.5.sslip.io/v3/import/{token}_c-m-pqd24nj8.yaml | kubectl apply -f -'
+  if [[ "$insecure_command" == *"{token}"* ]]; then
+    local namespace="$cluster_name"
+    local secret_name
+    secret_name=$($KUBECTL -n "$namespace" get clusterregistrationtokens.management.cattle.io default-token \
+      -o jsonpath='{.status.tokenSecretName}')
+    local token
+    token=$($KUBECTL -n "$namespace" get secret "$secret_name" \
+      -o jsonpath='{.data.token}' | base64 --decode)
+    insecure_command="${insecure_command//\{token\}/$token}"
+  fi
+
+  echo "$insecure_command"
 }
 
 wait_for_registration_token() {
@@ -131,6 +148,10 @@ EOF
     return 1
   fi
   local insecure_command=$(get_registration_import_cmd "$cluster_name")
+  if [ -z "$insecure_command" ]; then
+    echo "Error: insecureCommand is empty"
+    exit 1
+  fi
   echo "Import command: $insecure_command"
 
   bash -c "export KUBECONFIG=${TOP_DIR}/kubeconfig; $insecure_command"
