@@ -86,6 +86,8 @@ tasks:
     cmds:
       - ./rancher/bootstrap.sh
       - touch {{.STATE_DIR}}/rancher_bootstrapped
+    status:
+      - test -f {{.STATE_DIR}}/rancher_bootstrapped
   rancher-install-extensions:
     desc: Install Rancher extensions (Harvester UI, AI Assistant, etc.)
     deps: [rancher-bootstrap]
