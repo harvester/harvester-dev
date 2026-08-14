@@ -99,9 +99,9 @@ rancher:
   interfaces:
     - ip: 10.0.10.5/24
   # Provisioning configuration
-  k3s_version: v1.35.3+k3s1
+  k3s_version: v1.36.3+k3s1
   repo: https://releases.rancher.com/server-charts/latest
-  version: v2.14.0
+  version: v2.15.0
   bootstrap_password: password
   admin_password: "password1234"
   hostname: rancher.10.0.10.5.sslip.io
