@@ -112,7 +112,7 @@ rancher:
       git_repo: "https://github.com/harvester/harvester-ui-extension"
       git_branch: "gh-pages"
     rancher-ai-ui:
-      enabled: true
+      enabled: false
       version: "1.1.0"
       git_repo: ""
       git_branch: ""
