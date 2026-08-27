@@ -49,10 +49,18 @@ From the repository root, run:
 task op:test-addons-ready
 ```
 
+To test only one addon, pass its name after `--`:
+
+```bash
+task op:test-addons-ready -- rancher-monitoring
+```
+
 The task copies the sample to `state/addons_config.yaml` and passes that file to
-the smoke test. When `node_count` is less than `2`, the task removes the
-`kube-system/descheduler` entry because descheduler is not expected on a
-single-node cluster.
+the smoke test. When an addon name is provided, the generated configuration is
+filtered to that addon. An unknown or unavailable addon name causes the task to
+fail before running the test. When `node_count` is less than `2`, the task
+removes the `kube-system/descheduler` entry because descheduler is not expected
+on a single-node cluster.
 
 All addons are enabled before polling begins. The test uses a shared five-minute
 timeout to wait for addon status `AddonDeploySuccessful`, followed by another
