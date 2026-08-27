@@ -280,9 +280,9 @@ tasks:
       - task: harvester-get-versions
       - ./tests/smoke-cluster-ready.sh
   test-addons-ready:
-    desc: Verify the Harvester addons are ready
+    desc: Verify the Harvester addons are ready. Use `-- ADDON` to test only one addon
     cmds:
-      - ./tests/smoke-addons-ready.sh
+      - ./tests/smoke-addons-ready.sh {{.CLI_ARGS}}
   test-cluster-upgrade:
     desc: Verify the Harvester cluster can be upgraded successfully
     cmds:

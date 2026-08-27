@@ -3,6 +3,13 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 source "$SCRIPT_DIR/../lib.sh"
 
+if [ "$#" -gt 1 ]; then
+  echo "Usage: $(basename "$0") [ADDON]" >&2
+  exit 1
+fi
+
+addon_name="${1:-}"
+
 TOP_DIR=$(get_top_dir)
 SMOKE_DIR=$(get_smoke_dir)
 CONFIG=$(get_config_file)
@@ -24,7 +31,19 @@ if [ "$NODE_COUNT" -lt 2 ]; then
   yq -i 'del(.addons[] | select(.namespace == "kube-system" and .name == "descheduler"))' "$addons_config"
 fi
 
-echo "Running smoke test to enable and verify Harvester addons..."
+if [ -n "$addon_name" ]; then
+  ADDON_NAME="$addon_name" yq -i '.addons = [.addons[] | select(.name == strenv(ADDON_NAME))]' "$addons_config"
+
+  if [ "$(yq '.addons | length' "$addons_config")" -eq 0 ]; then
+    echo "Error: addon '$addon_name' is not available in the addon test configuration." >&2
+    exit 1
+  fi
+
+  echo "Running smoke test for Harvester addon $addon_name..."
+else
+  echo "Running smoke test for all configured Harvester addons..."
+fi
+
 set -x
 cd "$SMOKE_DIR"
 go test -v -count 1 -timeout 4h ./pkg/addons -run TestAddons \
