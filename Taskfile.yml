@@ -13,6 +13,13 @@ includes:
     vars:
       TF_DIR: "{{.TF_DIR}}"
       STATE_DIR: "{{.STATE_DIR}}"
+  x:
+    taskfile: ./extra/Taskfile.yml
+    optional: true
+    dir: ./extra
+    vars:
+      TF_DIR: "{{.TF_DIR}}"
+      STATE_DIR: "{{.STATE_DIR}}"
 
 tasks:
   default:
@@ -157,11 +164,3 @@ tasks:
     desc: Get or set the number of nodes in config.yaml. Use `-- N` to set the count, e.g. `task node-count -- 3`
     cmds:
       - ./op/nodes/node-count.sh {{.CLI_ARGS}}
-
-
-# tmp
-
-  patch-upgrade-image:
-    desc: Patch the upgrade image
-    cmds:
-      - ./op/nodes/mock-image.sh rancher/harvester-upgrade:dev rancher/harvester-upgrade:v1.8.0-rc5
