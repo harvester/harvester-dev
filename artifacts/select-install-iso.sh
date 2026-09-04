@@ -8,39 +8,53 @@ ISOS_DIR="$SCRIPT_DIR/isos"
 # Get artifact server URL from config
 ARTIFACT_SERVER_URL=$(yq -e '.artifact_server_url' "$CONFIG_FILE")
 
-echo "Available Harvester versions:"
-echo ""
-
-# List available ISO directories with numbers
+# List available ISO directories
 versions=()
-index=1
 for dir in "$ISOS_DIR"/*/; do
   if [ -d "$dir" ]; then
-    version=$(basename "$dir")
-    versions+=("$version")
-    echo "  $index) $version"
-    ((index++))
+    versions+=("$(basename "$dir")")
   fi
 done
 
-echo ""
-
 # Get selection
 if [ $# -eq 1 ]; then
-  selection="$1"
+  SELECTED_VERSION="$1"
+
+  # Validate that the given version is one of the available ISO directories
+  valid=false
+  for v in "${versions[@]}"; do
+    if [ "$v" = "$SELECTED_VERSION" ]; then
+      valid=true
+      break
+    fi
+  done
+  if [ "$valid" != true ]; then
+    echo "Error: '$SELECTED_VERSION' is not a valid version. Available versions:"
+    printf '  %s\n' "${versions[@]}"
+    exit 1
+  fi
 else
+  echo "Available Harvester versions:"
+  echo ""
+  index=1
+  for version in "${versions[@]}"; do
+    echo "  $index) $version"
+    ((index++))
+  done
+  echo ""
+
   read -p "Select version [1-${#versions[@]}] (default: 1): " selection
   selection=${selection:-1}
-fi
 
-# Validate numeric selection
-if ! [[ "$selection" =~ ^[0-9]+$ ]] || [ "$selection" -lt 1 ] || [ "$selection" -gt "${#versions[@]}" ]; then
-  echo "Error: Invalid selection. Please choose a number between 1 and ${#versions[@]}"
-  exit 1
-fi
+  # Validate numeric selection
+  if ! [[ "$selection" =~ ^[0-9]+$ ]] || [ "$selection" -lt 1 ] || [ "$selection" -gt "${#versions[@]}" ]; then
+    echo "Error: Invalid selection. Please choose a number between 1 and ${#versions[@]}"
+    exit 1
+  fi
 
-# Get selected version (arrays are 0-indexed)
-SELECTED_VERSION="${versions[$((selection - 1))]}"
+  # Get selected version (arrays are 0-indexed)
+  SELECTED_VERSION="${versions[$((selection - 1))]}"
+fi
 
 echo "Selected version: $SELECTED_VERSION"
 echo "Updating config.yaml..."
