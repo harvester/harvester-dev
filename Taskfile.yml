@@ -69,13 +69,13 @@ tasks:
     cmds:
       - ./scripts/plan-networks.sh {{.CLI_ARGS}}
   select-install-iso:
-    desc: Select an ISO and update config file
+    desc: "Select an ISO and update config file. Use `-- VERSION` to specify a version directly, e.g. `task select-install-iso -- v1.3.0`"
     cmds:
-      - ./artifacts/select-install-iso.sh
+      - ./artifacts/select-install-iso.sh {{.CLI_ARGS}}
   select-upgrade-iso:
-    desc: Select an ISO and update config file
+    desc: "Select an ISO and update config file. Use `-- VERSION` to specify a version directly, e.g. `task select-upgrade-iso -- v1.3.0`"
     cmds:
-      - ./artifacts/select-upgrade-iso.sh
+      - ./artifacts/select-upgrade-iso.sh {{.CLI_ARGS}}
   init_tf:
     desc: Initialize Terraform and download provider plugins
     cmds:
