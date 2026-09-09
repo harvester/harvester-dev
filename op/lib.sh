@@ -625,7 +625,7 @@ ssh_exec() {
     return 1
   fi
   
-  echo "Executing on $hostname: $command"
+  echo "Executing on $hostname: $command" >&2
   ssh -F "$ssh_config" "$hostname" "$command"
   return $?
 }
