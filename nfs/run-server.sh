@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_FILE="$SCRIPT_DIR/../config.yaml"
 
 PREFIX=$(yq '.provider.domain_prefix' "$CONFIG_FILE")
-MGMT_IP=$(yq '.networks.mgmt.bridge_ip' "$CONFIG_FILE")
+MGMT_IP=$(yq -e '.networks.mgmt.bridge_ip' "$CONFIG_FILE")
 
 CONTAINER_NAME="${PREFIX}-nfs-server"
 IMAGE_NAME="${PREFIX}-nfs-server"
@@ -29,11 +29,11 @@ docker build -t "$IMAGE_NAME" "$SCRIPT_DIR"
 mkdir -p "$SCRIPT_DIR/backup_target"
 
 # DAC_READ_SEARCH is required by ganesha's VFS FSAL (open_by_handle_at)
-echo "Starting NFS server on port $PORT..."
+echo "Starting NFS server on ${MGMT_IP}:${PORT}..."
 docker run -d \
   --name "$CONTAINER_NAME" \
   --cap-add DAC_READ_SEARCH \
-  -p "$PORT:2049" \
+  -p "${MGMT_IP}:${PORT}:2049" \
   -v "$SCRIPT_DIR/backup_target:/backup_target" \
   --restart unless-stopped \
   "$IMAGE_NAME"
