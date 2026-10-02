@@ -5,6 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_FILE="$SCRIPT_DIR/../config.yaml"
 
 PREFIX=$(yq '.provider.domain_prefix' "$CONFIG_FILE")
+MGMT_IP=$(yq -e '.networks.mgmt.bridge_ip' "$CONFIG_FILE")
 
 
 CONTAINER_NAME="${PREFIX}-artifacts-server"
@@ -31,16 +32,16 @@ mkdir -p "$SCRIPT_DIR/images"
 mkdir -p "$SCRIPT_DIR/isos"
 
 # Run the container with bind mounts
-echo "Starting artifacts server on port $PORT..."
+echo "Starting artifacts server on ${MGMT_IP}:${PORT}..."
 docker run -d \
   --name "$CONTAINER_NAME" \
-  -p "$PORT:80" \
+  -p "${MGMT_IP}:${PORT}:80" \
   -v "$SCRIPT_DIR/images:/usr/share/nginx/html/images:ro" \
   -v "$SCRIPT_DIR/isos:/usr/share/nginx/html/isos:ro" \
   --restart unless-stopped \
   "$IMAGE_NAME"
 
-echo "Artifacts server is running at http://localhost:$PORT"
+echo "Artifacts server is running at http://${MGMT_IP}:${PORT}"
 echo ""
 echo "To stop the server, run:"
 echo "  docker stop $CONTAINER_NAME"

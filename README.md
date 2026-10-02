@@ -140,15 +140,15 @@ sudo firewall-cmd --permanent --zone=public  --add-port=5951-5970/tcp  # VNC con
 sudo firewall-cmd --reload
 ```
 
-### 3. Configure and start the artifact server
+### 3. Configure and download images
 
 ```bash
 cp config.yaml.sample config.yaml
 task download-images
-task artifacts-up
 ```
 
-The artifact server (nginx) serves `./artifacts/isos` and `./artifacts/images`.
+The artifact server starts automatically during `task build` / `task up` on the
+management IP. Set `artifacts.server_enabled: false` in `config.yaml` to disable it.
 
 ### 4. Plan networks
 
@@ -200,7 +200,7 @@ task up
 ```
 
 > [!NOTE]
-> To use external artifacts instead of the local artifact server, set `.admin.egress_enabled: true` and point these fields to external URLs:
+> To use external artifacts instead of the local artifact server, set `.artifacts.server_enabled: false` and `.admin.egress_enabled: true`, and point these fields to external URLs:
 > ```
 > harvester_iso_url:
 > harvester_kernel_url:
@@ -237,7 +237,16 @@ task op:admin-disable-egress  # disable forwarding
 task clean
 ```
 
-Destroys and undefines all libvirt domains, volumes, and networks.
+Removes the artifacts server container and destroys and undefines all libvirt
+domains, volumes, and networks. Downloaded ISOs and images are kept.
+
+To remove only the artifacts server container:
+
+```bash
+task artifacts-down
+```
+
+Use `task artifacts-up` to rebuild and start it again while the management bridge exists.
 
 ## More
 

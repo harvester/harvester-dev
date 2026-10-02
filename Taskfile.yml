@@ -32,9 +32,24 @@ tasks:
       - ./scripts/download-images.sh
       - ls -alh {{.ROOT_DIR}}/artifacts/images
   artifacts-up:
-    desc: Build and run the artifacts server container
+    desc: Build and run the artifacts server container if enabled
+    vars:
+      SERVER_ENABLED:
+        sh: yq '.artifacts.server_enabled != false' '{{.CONFIG_FILE}}'
+    if: '{{eq .SERVER_ENABLED "true"}}'
     cmds:
       - ./artifacts/run-server.sh
+  artifacts-down:
+    desc: Remove the artifacts server container (keep downloaded artifacts)
+    vars:
+      PREFIX:
+        sh: yq -e '.provider.domain_prefix' '{{.CONFIG_FILE}}'
+      CONTAINER_ID:
+        sh: docker ps --all --quiet --filter 'name=^/{{.PREFIX}}-artifacts-server$'
+    status:
+      - test -z '{{.CONTAINER_ID}}'
+    cmds:
+      - docker rm --force '{{.CONTAINER_ID}}'
   artifacts-curl-test:
     desc: Curl artifacts server from the admin node
     cmds:
@@ -108,6 +123,8 @@ tasks:
     deps: [init, check]
     cmds:
       - terraform -chdir={{.TF_DIR}} apply --auto-approve
+      # The management bridge must exist before the server can bind to its IP.
+      - task: artifacts-up
   admin-up:
     desc: Power on admin node and wait for it to be ready
     cmds:
@@ -147,6 +164,7 @@ tasks:
       - task: op:rancher-clean-state
       - task: op:nodes-destroy
       - task: op:nodes-clean-state
+      - task: artifacts-down
       - terraform -chdir={{.TF_DIR}} destroy --auto-approve
 #      - rm -rf {{.STATE_DIR}}/keys
       - rm -f {{.STATE_DIR}}/ssh_config
