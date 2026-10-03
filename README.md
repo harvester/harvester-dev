@@ -64,6 +64,15 @@ Each libvirt network creates a Linux bridge with the same name on the host. Numb
   - Nested VMs get IPs from admin dnsmasq; egress follows the admin node setting.
 
 
+## Clone the repo
+
+```bash
+git clone https://github.com/harvester/harvester-dev
+cd harvester-dev
+```
+
+Run the following commands from the repository root unless noted otherwise.
+
 ## Prerequisites
 
 Run the check script:
@@ -131,14 +140,7 @@ sudo firewall-cmd --permanent --zone=public  --add-port=5951-5970/tcp  # VNC con
 sudo firewall-cmd --reload
 ```
 
-### 3. Clone the repo
-
-```bash
-git clone https://github.com/harvester/harvester-dev
-cd harvester-dev
-```
-
-### 4. Configure and start the artifact server
+### 3. Configure and start the artifact server
 
 ```bash
 cp config.yaml.sample config.yaml
@@ -148,7 +150,7 @@ task artifacts-up
 
 The artifact server (nginx) serves `./artifacts/isos` and `./artifacts/images`.
 
-### 5. Plan networks
+### 4. Plan networks
 
 Generate random MAC addresses:
 
@@ -172,7 +174,7 @@ task plan-networks -- --nat hvst-libvirt,192.168.123.0/24 --mgmt hvst-mgmt,10.0.
 
 Only `*.0/24` subnets are supported. For finer control, edit `config.yaml` directly.
 
-### 6. Bring up the cluster
+### 5. Bring up the cluster
 
 Download a Harvester ISO:
 
