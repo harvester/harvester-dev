@@ -105,6 +105,10 @@ rancher:
   repo: https://releases.rancher.com/server-charts/latest
   version: v2.15.0
   bootstrap_password: password
+  # Registry mirrors for the Rancher local cluster (k3s), e.g.:
+  #   - registry: docker.io
+  #     endpoint: http://10.0.10.1:5000
+  registry_mirrors: []
   admin_password: "password1234"
   hostname: rancher.10.0.10.5.sslip.io
   extensions:

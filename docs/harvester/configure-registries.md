@@ -2,6 +2,8 @@
 
 The `op:harvester-configure-registries` task applies the `containerd-registry` setting to the Harvester cluster, directing containerd to pull images through local mirror endpoints instead of the upstream registries.
 
+This task only configures the Harvester cluster. To configure registry mirrors for the Rancher `local` cluster (k3s on the Rancher VM), see [Registry mirrors](../rancher/provisioning-and-import.md#registry-mirrors).
+
 ## Configuration
 
 Add a `registry_mirrors` list under `.harvester` in `config.yaml`. Each entry requires a `registry` (the upstream registry hostname) and an `endpoint` (the mirror URL):
