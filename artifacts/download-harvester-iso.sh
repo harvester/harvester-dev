@@ -4,6 +4,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 CONFIG_FILE="$SCRIPT_DIR/../config.yaml"
 BASE_URL=$(yq -e '.harvester_release_url' "$CONFIG_FILE")
+RELEASE_PREFIX=$(yq -e '.harvester_release_prefix // "harvester"' "$CONFIG_FILE")
 
 # Configuration
 DOWNLOADS_DIR="$SCRIPT_DIR/isos"
@@ -21,7 +22,7 @@ create_downloads_dir() {
 
 # Function 2: Check and create version directory
 check_version_dir() {
-    local version_dir="$DOWNLOADS_DIR/harvester-$VERSION"
+    local version_dir="$DOWNLOADS_DIR/${RELEASE_PREFIX}-$VERSION"
 
     # If version is master, always remove the directory to get fresh files
     if [ "$VERSION" = "master" ] && [ -d "$version_dir" ]; then
@@ -55,23 +56,23 @@ download_file() {
 
 # Function 4: Download all required files
 download_all_files() {
-    local version_dir="$DOWNLOADS_DIR/harvester-$VERSION"
+    local version_dir="$DOWNLOADS_DIR/${RELEASE_PREFIX}-$VERSION"
     local base_url="$BASE_URL/$VERSION"
 
-    download_file "${base_url}/harvester-${VERSION}-amd64.iso" \
-        "${version_dir}/harvester-${VERSION}-amd64.iso"
+    download_file "${base_url}/${RELEASE_PREFIX}-${VERSION}-amd64.iso" \
+        "${version_dir}/${RELEASE_PREFIX}-${VERSION}-amd64.iso"
 
-    download_file "${base_url}/harvester-${VERSION}-amd64.sha512" \
-        "${version_dir}/harvester-${VERSION}-amd64.sha512"
+    download_file "${base_url}/${RELEASE_PREFIX}-${VERSION}-amd64.sha512" \
+        "${version_dir}/${RELEASE_PREFIX}-${VERSION}-amd64.sha512"
 
-    download_file "${base_url}/harvester-${VERSION}-initrd-amd64" \
-        "${version_dir}/harvester-${VERSION}-initrd-amd64"
+    download_file "${base_url}/${RELEASE_PREFIX}-${VERSION}-initrd-amd64" \
+        "${version_dir}/${RELEASE_PREFIX}-${VERSION}-initrd-amd64"
 
-    download_file "${base_url}/harvester-${VERSION}-vmlinuz-amd64" \
-        "${version_dir}/harvester-${VERSION}-vmlinuz-amd64"
+    download_file "${base_url}/${RELEASE_PREFIX}-${VERSION}-vmlinuz-amd64" \
+        "${version_dir}/${RELEASE_PREFIX}-${VERSION}-vmlinuz-amd64"
 
-    download_file "${base_url}/harvester-${VERSION}-rootfs-amd64.squashfs" \
-        "${version_dir}/harvester-${VERSION}-rootfs-amd64.squashfs"
+    download_file "${base_url}/${RELEASE_PREFIX}-${VERSION}-rootfs-amd64.squashfs" \
+        "${version_dir}/${RELEASE_PREFIX}-${VERSION}-rootfs-amd64.squashfs"
 
     download_file "${base_url}/version.yaml" \
         "${version_dir}/version.yaml" || true
@@ -79,9 +80,9 @@ download_all_files() {
 
 # Function 5: Validate checksum
 validate_checksum() {
-    local version_dir="$DOWNLOADS_DIR/harvester-$VERSION"
+    local version_dir="$DOWNLOADS_DIR/${RELEASE_PREFIX}-$VERSION"
     local checked_file="checked"
-    local filtered_sha512_file="harvester-${VERSION}-amd64.sha512.filtered"
+    local filtered_sha512_file="${RELEASE_PREFIX}-${VERSION}-amd64.sha512.filtered"
 
     pushd "$version_dir" > /dev/null || return 1
 
@@ -95,7 +96,7 @@ validate_checksum() {
     echo "Validating checksum..."
 
     # Filter out net-install.iso line from checksum file
-    grep -v "net-install.iso" "harvester-${VERSION}-amd64.sha512" > "$filtered_sha512_file"
+    grep -v "net-install.iso" "${RELEASE_PREFIX}-${VERSION}-amd64.sha512" > "$filtered_sha512_file"
 
     # Compare checksums
     if sha512sum -c "$filtered_sha512_file" 2>/dev/null; then
@@ -115,7 +116,7 @@ validate_checksum() {
 # Main execution
 main() {
     echo "==========================================="
-    echo "Preparing Harvester ISO for version: $VERSION"
+    echo "Preparing $RELEASE_PREFIX ISO for version: $VERSION"
     echo "==========================================="
 
     # Step 1: Create downloads directory
