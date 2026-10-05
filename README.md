@@ -183,6 +183,10 @@ Download a Harvester ISO:
 ./artifacts/download-harvester-iso.sh v1.8.1    # specific release
 ```
 
+For SUSE Virtualization, set `harvester_release_url` to your release server
+and `harvester_release_prefix: suse-virtualization` in `config.yaml`, then run
+`./artifacts/download-harvester-iso.sh <versin>`.
+
 Select the ISO to use:
 
 ```bash

@@ -9,6 +9,8 @@
 # Release server configuration
 ##############################################################################
 harvester_release_url: https://releases.rancher.com/harvester
+# Filename and directory prefix: harvester (default) or suse-virtualization.
+harvester_release_prefix: harvester
 artifact_server_url: http://10.0.10.1:8787
 harvester_version: harvester-master
 harvester_iso_url: http://10.0.10.1:8787/isos/harvester-master/harvester-master-amd64.iso
