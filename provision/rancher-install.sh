@@ -59,6 +59,17 @@ error_handler() {
 # Trap errors and call error handler
 trap error_handler ERR EXIT
 
+configure_k3s_registries() {
+    if [ -z "${K3S_REGISTRIES_FILE:-}" ]; then
+        echo "No k3s registry mirrors configured"
+        return 0
+    fi
+    echo "Configuring k3s registries from ${K3S_REGISTRIES_FILE}"
+    mkdir -p /etc/rancher/k3s
+    install -m 0600 "${K3S_REGISTRIES_FILE}" /etc/rancher/k3s/registries.yaml
+    cat /etc/rancher/k3s/registries.yaml
+}
+
 install_k3s() {
 	curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="$INSTALL_K3S_VERSION" sh -
 }
@@ -203,6 +214,7 @@ wait_rancher_webhook_pods() {
 
 check_state
 
+configure_k3s_registries
 install_k3s
 setup_k3s_localrc
 . /etc/bash.bashrc.local

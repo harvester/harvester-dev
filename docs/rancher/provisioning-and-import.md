@@ -1,11 +1,14 @@
 # Provision Rancher and import Harvester cluster to it
 
+## Configuration
+
 Ensure you have sane configuration in the `.rancher` section. Set the `enabled` field to `true`.
 
 Import configurable values are:
 - `k3s_version`: The k3s version to provision.
 - `repo`: Rancher chart repo.
 - `version`: The rancher version you'd like to provision.
+- `registry_mirrors` (optional): Registry mirrors (e.g., pull-through caches) for the Rancher `local` cluster (k3s). See the note below the example.
 
 ```yaml
 rancher:
@@ -23,7 +26,14 @@ rancher:
   bootstrap_password: password
   admin_password: "password1234"
   hostname: rancher.10.8.0.5.sslip.io
+  registry_mirrors:
+    - registry: docker.io
+      endpoint: http://10.8.0.1:5000
 ```
+
+`registry_mirrors` is rendered as k3s [`registries.yaml`](https://docs.k3s.io/installation/private-registry) for the Rancher `local` cluster only. It doesn't apply to guest clusters or the imported Harvester cluster; for Harvester, see [op:harvester-configure-registries](../harvester/configure-registries.md).
+
+## Provision and import
 
 Ensure you have a running Harvester cluster first.
 
