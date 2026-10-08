@@ -45,7 +45,13 @@ for i in $(seq 1 "${#NODES[@]}"); do
     continue
   fi
 
-  mapfile -t vip_ifaces < <(jq -r '.[] | select(.ifname | startswith("vip-")) | .ifname' <<<"$devices_json")
+  # When no link matches the type filter, iproute2 (seen on 6.12) emits one
+  # `{}` per link instead of `[]`. Skip entries without .ifname, and log the
+  # raw output in that case for debugging.
+  if jq -e 'any(.[]; (.ifname | type) != "string")' <<<"$devices_json" >/dev/null 2>&1; then
+    log "$host: macvlan list has entries without ifname ($(ssh_node "$host" "ip -V" || echo 'ip -V failed')): $devices_json"
+  fi
+  mapfile -t vip_ifaces < <(jq -r '.[] | select((.ifname // "") | startswith("vip-")) | .ifname' <<<"$devices_json")
   if [[ ${#vip_ifaces[@]} -eq 0 ]]; then
     log "$host: no vip-* device found"
     continue
