@@ -1,6 +1,6 @@
 module github.com/harvester/harvester-smoke
 
-go 1.25.7
+go 1.26.0
 
 replace (
 	github.com/openshift/api => github.com/openshift/api v0.0.0-20191219222812-2987a591a72c
