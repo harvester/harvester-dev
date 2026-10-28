@@ -628,8 +628,8 @@ k8s.io/kube-openapi/pkg/schemaconv
 k8s.io/kube-openapi/pkg/spec3
 k8s.io/kube-openapi/pkg/util/proto
 k8s.io/kube-openapi/pkg/validation/spec
-# k8s.io/kubernetes v1.31.1
-## explicit; go 1.22.0
+# k8s.io/kubernetes v1.32.10
+## explicit; go 1.23.0
 k8s.io/kubernetes/plugin/pkg/admission/eventratelimit/apis/eventratelimit
 # k8s.io/utils v0.0.0-20241104100929-3ea5e8cea738
 ## explicit; go 1.18
