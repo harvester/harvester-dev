@@ -66,6 +66,36 @@ curl -O http://10.0.10.1:8787/proxy_ssl/releases.example.com/v1.8.0/harvester.is
 curl -O http://10.0.10.1:8787/proxy_ssl_insecure/10.10.0.100:8443/test.iso
 ```
 
+### Boot or upgrade from a remote release
+
+Two tasks point `config.yaml` at a release server, so you don't have to
+download the files first. They take the same options as each other and are
+the remote counterparts of `select-install-iso` / `select-upgrade-iso`:
+
+| Task | Sets |
+|---|---|
+| `select-install-remote-iso` | `harvester_version`, `harvester_iso_url`, `harvester_kernel_url`, `harvester_ramdisk_url`, `harvester_rootfs_url` |
+| `select-upgrade-remote-iso` | `tests.upgrade.iso_url` |
+
+With `--proxy`, the URLs use the proxy paths above. This needs
+`artifacts.proxy_enabled: true`:
+
+```sh
+# http://10.0.10.1:8787/proxy_ssl/releases.rancher.com/harvester/v1.8.1/...
+task select-install-remote-iso -- --proxy v1.8.1
+task select-upgrade-remote-iso -- --proxy v1.8.2
+
+# Self-signed release server
+task select-install-remote-iso -- --release-server https://10.10.0.100/harvester --proxy-insecure v1.8.1
+```
+
+The release server defaults to `harvester_release_url`, and file names use
+`harvester_release_prefix`. The scripts send a HEAD request for each file
+first and leave `config.yaml` unchanged if a file they set is missing. The
+checksum file and `version.yaml` are skipped if they're missing. With
+`--proxy`, a redirect from the release server counts as an error, because
+VMs would follow it to the remote host directly.
+
 ### Troubleshooting
 
 The proxy returns `502 Bad Gateway` when it can't fetch the file. Check the
