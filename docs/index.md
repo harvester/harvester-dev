@@ -2,6 +2,10 @@
 
 Check the main [README.md](../README.md) for how to bring a Harvester clusters locally.
 
+## Artifact server
+
+- [Artifact server](./artifact-server.md) - Serve local ISOs and images, and proxy files from other HTTP(S) servers.
+
 ## Nodes Tasks - Manage nodes
 
 - [op:iso-boot-nodes-start](./nodes/iso-nodes.md) - Create VMs that boot from Harvesetr ISO directly. Useful if you want to test the manually ISO interative installation.

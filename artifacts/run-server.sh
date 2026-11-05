@@ -6,6 +6,7 @@ CONFIG_FILE="$SCRIPT_DIR/../config.yaml"
 
 PREFIX=$(yq '.provider.domain_prefix' "$CONFIG_FILE")
 MGMT_IP=$(yq -e '.networks.mgmt.bridge_ip' "$CONFIG_FILE")
+PROXY_ENABLED=$(yq '.artifacts.proxy_enabled == true' "$CONFIG_FILE")
 
 
 CONTAINER_NAME="${PREFIX}-artifacts-server"
@@ -36,12 +37,16 @@ echo "Starting artifacts server on ${MGMT_IP}:${PORT}..."
 docker run -d \
   --name "$CONTAINER_NAME" \
   -p "${MGMT_IP}:${PORT}:80" \
+  -e "ARTIFACTS_PROXY_ENABLED=${PROXY_ENABLED}" \
   -v "$SCRIPT_DIR/images:/usr/share/nginx/html/images:ro" \
   -v "$SCRIPT_DIR/isos:/usr/share/nginx/html/isos:ro" \
   --restart unless-stopped \
   "$IMAGE_NAME"
 
 echo "Artifacts server is running at http://${MGMT_IP}:${PORT}"
+if [ "$PROXY_ENABLED" = "true" ]; then
+  echo "Proxy paths (/proxy/, /proxy_ssl/, /proxy_ssl_insecure/) are enabled"
+fi
 echo ""
 echo "To stop the server, run:"
 echo "  docker stop $CONTAINER_NAME"
