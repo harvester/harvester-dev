@@ -17,6 +17,10 @@ tests:
 | `parallel_preload` | Load images in parallel during upgrade; see [upgrade-config](https://docs.harvesterhci.io/v1.8/advanced/index#upgrade-config). |
 
 
+To set `iso_url`, use `task select-upgrade-iso -- VERSION` for an ISO in
+`./artifacts/isos`, or `task select-upgrade-remote-iso -- [--proxy] VERSION`
+for a release server (see [Artifact server](../artifact-server.md#boot-or-upgrade-from-a-remote-release)).
+
 And upgrade the Harvester cluster by:
 
 ```
