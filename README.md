@@ -147,8 +147,11 @@ cp config.yaml.sample config.yaml
 task download-images
 ```
 
-The artifact server starts automatically during `task build` / `task up` on the
-management IP. Set `artifacts.server_enabled: false` in `config.yaml` to disable it.
+The artifact server (nginx) serves `./artifacts/isos` and `./artifacts/images`,
+and can proxy files from other HTTP(S) servers (off by default); see
+[Artifact server](docs/artifact-server.md). It starts automatically during
+`task build` / `task up` on the management IP. Set
+`artifacts.server_enabled: false` in `config.yaml` to disable it.
 
 ### 4. Plan networks
 
@@ -208,6 +211,11 @@ task up
 > harvester_rootfs_url:
 > ```
 > This enables egress on the admin node, so the environment is no longer air-gapped.
+>
+> To keep the environment air-gapped, set `artifacts.proxy_enabled: true`
+> and point these fields at the artifact server's
+> [proxy paths](docs/artifact-server.md#proxy) instead, e.g.
+> `http://10.0.10.1:8787/proxy/10.10.0.100/harvester.iso`.
 
 ## Usage
 

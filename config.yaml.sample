@@ -29,6 +29,8 @@ golden:
 artifacts:
   # Set false to skip starting the local artifacts server (default: true).
   server_enabled: true
+  # Set true to enable the artifacts server proxy paths (default: false).
+  proxy_enabled: false
   images:
     - name: alpine-admin.img
       url: https://github.com/bk201/alpine-cloud-images/releases/download/20261106/3.24.4-x86_64-bios-cloudinit-vm-generic-20261106.img.gz
