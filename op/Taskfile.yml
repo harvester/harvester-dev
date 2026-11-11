@@ -93,6 +93,10 @@ tasks:
     deps: [rancher-bootstrap]
     cmds:
       - ./rancher/install-extensions.sh
+  rancher-list-kdm-versions:
+    desc: List RKE2/K3s versions supported by the configured Rancher version (from KDM)
+    cmds:
+      - ./rancher/list-kdm-versions.sh {{.CLI_ARGS}}
   rancher-clean-state:
     desc: Clean up state files related to Rancher bootstrap
     cmds:
@@ -255,6 +259,10 @@ tasks:
     cmds:
       # - task: harvester-bootstrap
       - ./harvester/import-to-rancher.sh
+  harvester-set-guest-clusters-k8s-version:
+    desc: "Set .guest_clusters[].kubernetes_version to the latest Rancher-supported version. Usage: task op:harvester-set-guest-clusters-k8s-version -- [rke2|k3s]"
+    cmds:
+      - ./harvester/set-guest-clusters-k8s-version.sh {{.CLI_ARGS}}
   harvester-create-guest-clusters:
     desc: Create guest clusters on Harvester
     cmds:
