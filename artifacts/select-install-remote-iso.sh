@@ -9,7 +9,8 @@ source "$SCRIPT_DIR/lib/remote-iso.sh"
 
 usage() {
   cat <<EOF
-Usage: $0 [--release-server URL] [--proxy | --proxy-insecure] [VERSION]
+Usage: $0 [--release-server URL] [--proxy | --proxy-insecure] [--skip-check]
+       [VERSION]
 
 Check that the release files exist on the remote server, then set
 harvester_version and harvester_{iso,kernel,ramdisk,rootfs}_url in
@@ -21,6 +22,7 @@ Examples:
   $0 v1.8.1
   $0 --proxy master
   $0 --release-server https://10.10.0.100/harvester --proxy-insecure v1.8.1
+  $0 --proxy --skip-check v1.8.1
 EOF
 }
 
@@ -31,8 +33,9 @@ KERNEL_URL=$(remote_url "$NAME-vmlinuz-amd64")
 RAMDISK_URL=$(remote_url "$NAME-initrd-amd64")
 ROOTFS_URL=$(remote_url "$NAME-rootfs-amd64.squashfs")
 
-remote_iso_check "$ISO_URL" "$KERNEL_URL" "$RAMDISK_URL" "$ROOTFS_URL" -- \
-  "$(remote_url "$NAME-amd64.sha512")" "$(remote_url version.yaml)"
+remote_iso_check "$NAME-amd64.iso" "$NAME-vmlinuz-amd64" \
+  "$NAME-initrd-amd64" "$NAME-rootfs-amd64.squashfs" -- \
+  "$NAME-amd64.sha512" version.yaml
 
 echo "Updating config.yaml..."
 

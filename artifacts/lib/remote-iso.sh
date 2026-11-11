@@ -4,7 +4,7 @@
 # then calls:
 #   remote_iso_parse_args "$@"   # sets VERSION, NAME, RELEASE_SERVER, ...
 #   remote_url FILE              # URL for a release file (proxied if asked)
-#   remote_iso_check REQUIRED... -- OPTIONAL...
+#   remote_iso_check REQUIRED_FILE... -- OPTIONAL_FILE...
 
 remote_iso_options_help() {
   cat <<EOF
@@ -15,18 +15,22 @@ Options:
                         (http -> /proxy/, https -> /proxy_ssl/)
   --proxy-insecure      Like --proxy, but https -> /proxy_ssl_insecure/
                         (accept self-signed certificates)
+  --skip-check          Don't check that the files exist on the release
+                        server
   -h, --help            Show this help
 
 VERSION defaults to master.
 EOF
 }
 
-# Parse [--release-server URL] [--proxy | --proxy-insecure] [VERSION] and
-# set RELEASE_SERVER, PROXY_MODE ("", "secure" or "insecure"), VERSION,
-# RELEASE_PREFIX, NAME, BASE_URL and, with a proxy, ARTIFACT_SERVER_URL.
+# Parse [--release-server URL] [--proxy | --proxy-insecure] [--skip-check]
+# [VERSION] and set RELEASE_SERVER, PROXY_MODE ("", "secure" or
+# "insecure"), SKIP_CHECK, VERSION, RELEASE_PREFIX, NAME, BASE_URL and,
+# with a proxy, ARTIFACT_SERVER_URL.
 remote_iso_parse_args() {
   RELEASE_SERVER=""
   PROXY_MODE=""
+  SKIP_CHECK=false
   VERSION=""
 
   while [ $# -gt 0 ]; do
@@ -49,6 +53,10 @@ remote_iso_parse_args() {
         ;;
       --proxy-insecure)
         PROXY_MODE="insecure"
+        shift
+        ;;
+      --skip-check)
+        SKIP_CHECK=true
         shift
         ;;
       -h|--help)
@@ -124,18 +132,18 @@ remote_url() {
   echo "$ARTIFACT_SERVER_URL/$location/${url#*://}"
 }
 
-# HEAD a URL. Prints a reason and returns 1 if it isn't usable.
-# Through the proxy, redirects are not followed: the proxy passes them to
-# the client unchanged, which would send VMs to the remote host directly.
+# HEAD a release server URL directly from this host (not through the
+# artifact server, which may not be running yet). Prints a reason and
+# returns 1 if it isn't usable.
+# With a proxy, redirects are not followed: the proxy passes them to the
+# client unchanged, which would send VMs to the remote host directly.
+# With --proxy-insecure, certificates aren't verified, like the proxy.
 remote_check_url() {
   local url="$1" out code redirect
-  if [ -n "$PROXY_MODE" ]; then
-    out=$(curl -sI -o /dev/null --max-time 30 \
-      -w '%{http_code} %{redirect_url}' "$url" || true)
-  else
-    out=$(curl -sIL -o /dev/null --max-time 30 \
-      -w '%{http_code} %{redirect_url}' "$url" || true)
-  fi
+  local -a opts=(-sI -o /dev/null --max-time 30)
+  [ -z "$PROXY_MODE" ] && opts+=(-L)
+  [ "$PROXY_MODE" = "insecure" ] && opts+=(-k)
+  out=$(curl "${opts[@]}" -w '%{http_code} %{redirect_url}' "$url" || true)
   code="${out%% *}"
   redirect="${out#* }"
 
@@ -150,8 +158,9 @@ remote_check_url() {
   return 1
 }
 
-# Print the selection, HEAD every URL and exit 1 if a required one fails.
-# Usage: remote_iso_check REQUIRED_URL... -- OPTIONAL_URL...
+# Print the selection, HEAD every file on the release server and exit 1
+# if a required one fails. Does nothing but print with --skip-check.
+# Usage: remote_iso_check REQUIRED_FILE... -- OPTIONAL_FILE...
 remote_iso_check() {
   echo "Release server: $RELEASE_SERVER"
   echo "Version: $VERSION"
@@ -161,14 +170,22 @@ remote_iso_check() {
     echo "Proxy: $ARTIFACT_SERVER_URL"
   fi
   echo ""
+
+  if [ "$SKIP_CHECK" = true ]; then
+    echo "Skipping remote file check (--skip-check)."
+    echo ""
+    return
+  fi
+
   echo "Checking remote files..."
 
-  local url reason failed=0 optional=false
-  for url in "$@"; do
-    if [ "$url" = "--" ]; then
+  local file url reason failed=0 optional=false
+  for file in "$@"; do
+    if [ "$file" = "--" ]; then
       optional=true
       continue
     fi
+    url="$BASE_URL/$file"
     if reason=$(remote_check_url "$url"); then
       echo "  ok:    $url"
     elif [ "$optional" = true ]; then

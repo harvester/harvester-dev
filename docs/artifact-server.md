@@ -92,9 +92,13 @@ task select-install-remote-iso -- --release-server https://10.10.0.100/harvester
 The release server defaults to `harvester_release_url`, and file names use
 `harvester_release_prefix`. The scripts send a HEAD request for each file
 first and leave `config.yaml` unchanged if a file they set is missing. The
-checksum file and `version.yaml` are skipped if they're missing. With
+checksum file and `version.yaml` are skipped if they're missing. The check
+goes from the host running the script straight to the release server, not
+through the proxy, so the artifact server doesn't need to be up yet. With
 `--proxy`, a redirect from the release server counts as an error, because
-VMs would follow it to the remote host directly.
+VMs would follow it to the remote host directly. `--proxy-insecure` skips
+certificate verification in the check too. Pass `--skip-check` to set the
+URLs without checking, e.g. when this host can't reach the release server.
 
 ### Troubleshooting
 

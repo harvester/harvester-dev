@@ -9,7 +9,8 @@ source "$SCRIPT_DIR/lib/remote-iso.sh"
 
 usage() {
   cat <<EOF
-Usage: $0 [--release-server URL] [--proxy | --proxy-insecure] [VERSION]
+Usage: $0 [--release-server URL] [--proxy | --proxy-insecure] [--skip-check]
+       [VERSION]
 
 Check that the release ISO exists on the remote server, then set
 .tests.upgrade.iso_url in config.yaml to point at it.
@@ -20,6 +21,7 @@ Examples:
   $0 v1.8.1
   $0 --proxy master
   $0 --release-server https://10.10.0.100/harvester --proxy-insecure v1.8.1
+  $0 --proxy --skip-check v1.8.1
 EOF
 }
 
@@ -27,8 +29,7 @@ remote_iso_parse_args "$@"
 
 ISO_URL=$(remote_url "$NAME-amd64.iso")
 
-remote_iso_check "$ISO_URL" -- \
-  "$(remote_url "$NAME-amd64.sha512")" "$(remote_url version.yaml)"
+remote_iso_check "$NAME-amd64.iso" -- "$NAME-amd64.sha512" version.yaml
 
 echo "Updating config.yaml..."
 

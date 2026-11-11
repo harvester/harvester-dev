@@ -88,7 +88,7 @@ tasks:
     cmds:
       - ./artifacts/select-install-iso.sh {{.CLI_ARGS}}
   select-install-remote-iso:
-    desc: "Point install ISO fields at a remote release server. Use `-- [--release-server URL] [--proxy|--proxy-insecure] VERSION`, e.g. `task select-install-remote-iso -- --proxy v1.8.1`"
+    desc: "Point install ISO fields at a remote release server. Use `-- [--release-server URL] [--proxy|--proxy-insecure] [--skip-check] VERSION`, e.g. `task select-install-remote-iso -- --proxy v1.8.1`"
     cmds:
       - ./artifacts/select-install-remote-iso.sh {{.CLI_ARGS}}
   select-upgrade-iso:
@@ -96,7 +96,7 @@ tasks:
     cmds:
       - ./artifacts/select-upgrade-iso.sh {{.CLI_ARGS}}
   select-upgrade-remote-iso:
-    desc: "Point the upgrade test ISO at a remote release server. Use `-- [--release-server URL] [--proxy|--proxy-insecure] VERSION`, e.g. `task select-upgrade-remote-iso -- --proxy v1.8.1`"
+    desc: "Point the upgrade test ISO at a remote release server. Use `-- [--release-server URL] [--proxy|--proxy-insecure] [--skip-check] VERSION`, e.g. `task select-upgrade-remote-iso -- --proxy v1.8.1`"
     cmds:
       - ./artifacts/select-upgrade-remote-iso.sh {{.CLI_ARGS}}
   init_tf:
