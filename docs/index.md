@@ -21,6 +21,7 @@ Check the main [README.md](../README.md) for how to bring a Harvester clusters l
 - [Provisiong Rancher VM and import the Harvester cluster](./rancher/provisioning-and-import.md)
 - [Create guest clsuters](./rancher/guest-clusters.md)
 - [Install Extensions](./rancher/install-extensions.md) - Harvester UI in Rancher, AI Assistant
+- [op:rancher-list-kdm-versions](./rancher/list-kdm-versions.md) - list RKE2/K3s versions supported by the configured Rancher version
 
 ## Tests
 
