@@ -16,7 +16,9 @@ task op:nodes-golden-create -- VERSION
 
 **VERSION** is the name of the golden image set. You must provide it.
 
-Optionally, pass `--timestamp TS` to record an arbitrary timestamp alongside the golden image (written to `timestamp` inside the golden version directory). This is used to track the source artifact's freshness, e.g. by [`golden-prepare.sh`](../../scripts/golden-prepare.sh):
+The script also writes `meta.yaml` into the golden version directory. It records `node_count` and these attributes of each enabled node: `ip`, `disks`, `interfaces`, and `mgmt_interface`.
+
+Optionally, pass `--timestamp TS` to record an arbitrary timestamp in the golden image metadata (the `timestamp` field of `meta.yaml`). This is used to track the source artifact's freshness, e.g. by [`golden-prepare.sh`](../../scripts/golden-prepare.sh):
 
 ```bash
 task op:nodes-golden-create -- --timestamp TS VERSION
@@ -36,6 +38,21 @@ Run the following command to restore a golden image. The cluster will be booted 
 ```bash
 task op:nodes-destroy
 task op:nodes-golden-restore-and-boot -- VERSION
+```
+
+Before touching any disk, the restore checks `config.yaml` against the golden metadata:
+
+- `node_count` doesn't need to match. If it differs, it is set in `config.yaml` to the value from the golden image.
+- For each node in the golden image, `ip`, `disks`, `interfaces`, and `mgmt_interface` must match the same entry in `.nodes` of `config.yaml`. If any of them differ, the restore stops and shows the differences.
+
+## List and inspect golden images
+
+```bash
+# list all golden images for this repo_id
+task op:nodes-golden-list
+
+# show the metadata and disk files of one version
+task op:nodes-golden-info -- VERSION
 ```
 
 ## Clean a golden image

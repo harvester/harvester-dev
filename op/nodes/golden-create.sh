@@ -68,7 +68,25 @@ cluster, not after boot-from-golden (refusing to copy an overlay)"
   done < <(domain_disks "$n")
 done
 
-[[ -z "$TIMESTAMP" ]] || echo "$TIMESTAMP" > "$(golden_dir "$GOLDEN_VERSION")/timestamp"
+# 3) record metadata: node topology this golden was taken from (checked on
+#    restore) plus the optional source timestamp.
+meta=$(golden_meta_path "$GOLDEN_VERSION")
+meta_tmp="$meta.tmp.$$"
+rm -f "$meta" "$meta_tmp"
+GOLDEN_VERSION="$GOLDEN_VERSION" \
+CREATED_AT="$(date -Iseconds)" \
+TIMESTAMP="$TIMESTAMP" \
+NODE_COUNT="${#NODES[@]}" \
+  yq -n "
+    .version = strenv(GOLDEN_VERSION) |
+    .created_at = strenv(CREATED_AT) |
+    .timestamp = (strenv(TIMESTAMP) | select(. != \"\") // null) |
+    .node_count = (strenv(NODE_COUNT) | to_number) |
+    .nodes = (load(\"$CONFIG_FILE\") | .nodes[0:${#NODES[@]}] | map($GOLDEN_NODE_ATTRS_EXPR))
+  " > "$meta_tmp"
+mv "$meta_tmp" "$meta"
+chmod 0444 "$meta"
+log "metadata written to $meta"
 
 log "golden masters (version $GOLDEN_VERSION) written to $(golden_dir "$GOLDEN_VERSION") (read-only)."
 log "source cluster left shut off. done."

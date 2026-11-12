@@ -114,6 +114,22 @@ golden_dir() { printf '%s/%s' "$(_golden_root)" "$1"; }
 # Usage: golden_node_disk_path <node> <target> <version>
 golden_node_disk_path() { printf '%s/%s__%s.qcow2' "$(golden_dir "$3")" "$1" "$2"; }
 
+# Path of the metadata file of a golden version (written by golden-create).
+# Usage: golden_meta_path <version>
+golden_meta_path() { printf '%s/meta.yaml' "$(golden_dir "$1")"; }
+
+# Per-node attributes recorded in golden metadata. They must match config.yaml
+# for a golden image to be restorable.
+GOLDEN_NODE_ATTRS_EXPR='{"ip": .ip, "disks": .disks, "interfaces": .interfaces, "mgmt_interface": .mgmt_interface}'
+
+# Print the recorded attributes of node <index> (0-based) from a YAML file that
+# has a `.nodes` list (config.yaml or golden meta.yaml), as one-line JSON so
+# the results can be compared as strings.
+# Usage: golden_node_attrs <yaml-file> <index>
+golden_node_attrs() {
+  yq -o=json -I=0 ".nodes[$2] | $GOLDEN_NODE_ATTRS_EXPR" "$1"
+}
+
 # Coordinated graceful shutdown of every node; block until all are "shut off".
 coordinated_shutdown() {
   local n state deadline all_off

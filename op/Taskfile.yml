@@ -193,8 +193,16 @@ tasks:
     desc: 'Create a golden image from the current node disk state (usage: task op:nodes-golden-create -- <version>)'
     cmds:
       - ./nodes/golden-create.sh {{.CLI_ARGS}}
+  nodes-golden-list:
+    desc: List all golden images
+    cmds:
+      - ./nodes/golden-list.sh
+  nodes-golden-info:
+    desc: 'Show golden image info for a version (usage: task op:nodes-golden-info -- <version>)'
+    cmds:
+      - ./nodes/golden-info.sh {{.CLI_ARGS}}
   nodes-golden-restore-and-boot:
-    desc: 'Boot the nodes from a previously created golden image (usage: task op:nodes-golden-restore-and-boot -- <version>)'
+    desc: 'Boot the nodes from a previously created golden image; node attributes must match the golden metadata and node_count is set from it (usage: task op:nodes-golden-restore-and-boot -- <version>)'
     cmds:
       - ./nodes/golden-restore.sh {{.CLI_ARGS}}
       - task: nodes-install
