@@ -23,13 +23,18 @@ is_valid() {
         return 1
     fi
 
-    if [[ ! -f "${golden_dir}/timestamp" ]]; then
-        echo "Timestamp file missing: ${golden_dir}/timestamp" >&2
+    local meta="${golden_dir}/meta.yaml"
+    if [[ ! -f "$meta" ]]; then
+        echo "Golden metadata missing: ${meta}" >&2
         return 1
     fi
 
     local local_timestamp
-    local_timestamp=$(cat "${golden_dir}/timestamp") || exit 1
+    local_timestamp=$(yq '.timestamp // ""' "$meta") || exit 1
+    if [[ -z "$local_timestamp" ]]; then
+        echo "Timestamp missing in golden metadata: ${meta}" >&2
+        return 1
+    fi
     echo "Local timestamp: ${local_timestamp}" >&2
 
     local remote_timestamp
