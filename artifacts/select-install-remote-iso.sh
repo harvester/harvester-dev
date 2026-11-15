@@ -40,7 +40,7 @@ remote_iso_check "$NAME-amd64.iso" "$NAME-vmlinuz-amd64" \
 echo "Updating config.yaml..."
 
 # Update config.yaml using sed to preserve formatting
-sed -i "s|^harvester_version:.*|harvester_version: $NAME|" "$CONFIG_FILE"
+sed -i "s|^harvester_version:.*|harvester_version: $VERSION|" "$CONFIG_FILE"
 sed -i "s|^harvester_iso_url:.*|harvester_iso_url: $ISO_URL|" "$CONFIG_FILE"
 sed -i "s|^harvester_kernel_url:.*|harvester_kernel_url: $KERNEL_URL|" "$CONFIG_FILE"
 sed -i "s|^harvester_ramdisk_url:.*|harvester_ramdisk_url: $RAMDISK_URL|" "$CONFIG_FILE"

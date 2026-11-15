@@ -13,15 +13,18 @@
 #
 # Usage: download-golden-iso.sh [--max-retains N] VERSION DOWNLOAD_BASE_DIR
 #
+# PREFIX is harvester_release_prefix (default: harvester).
+#
 # Directory structure:
 #   DOWNLOAD_BASE_DIR/
 #   └── VERSION/
 #       ├── latest                          <- contains REMOTE_TIMESTAMP string
 #       ├── 20240601T120000Z/               <- older, may be pruned
-#       │   ├── harvester-VERSION-amd64.sha512
-#       │   ├── harvester-VERSION-initrd-amd64
-#       │   ├── harvester-VERSION-vmlinuz-amd64
-#       │   ├── harvester-VERSION-rootfs-amd64.squashfs
+#       │   ├── PREFIX-VERSION-amd64.iso
+#       │   ├── PREFIX-VERSION-amd64.sha512
+#       │   ├── PREFIX-VERSION-initrd-amd64
+#       │   ├── PREFIX-VERSION-vmlinuz-amd64
+#       │   ├── PREFIX-VERSION-rootfs-amd64.squashfs
 #       │   ├── version.yaml
 #       │   └── checked
 #       └── 20240702T083000Z/               <- newest, always kept
@@ -53,6 +56,8 @@ VERSION="$1"
 DOWNLOAD_BASE_DIR="$2"
 
 BASE_URL=$(yq -e '.harvester_release_url' "$CONFIG_FILE")
+RELEASE_PREFIX=$(yq -e '.harvester_release_prefix // "harvester"' "$CONFIG_FILE")
+NAME="${RELEASE_PREFIX}-${VERSION}"
 VERSION_DIR="${DOWNLOAD_BASE_DIR}/${VERSION}"
 
 download_file() {
@@ -65,7 +70,7 @@ download_file() {
 
 mkdir -p "$VERSION_DIR"
 
-REMOTE_CHECKSUM_URL="${BASE_URL}/${VERSION}/harvester-${VERSION}-amd64.sha512"
+REMOTE_CHECKSUM_URL="${BASE_URL}/${VERSION}/${NAME}-amd64.sha512"
 last_modified=$(curl -fsSI "$REMOTE_CHECKSUM_URL" \
     | grep -i "^last-modified:" | cut -d' ' -f2- | tr -d '\r')
 REMOTE_TIMESTAMP=$(date -u -d "$last_modified" "+%Y%m%dT%H%M%SZ")
@@ -84,25 +89,25 @@ mkdir -p "$ts_dir"
 
 base_url="${BASE_URL}/${VERSION}"
 
-download_file "${base_url}/harvester-${VERSION}-amd64.iso" \
-    "${ts_dir}/harvester-${VERSION}-amd64.iso"
+download_file "${base_url}/${NAME}-amd64.iso" \
+    "${ts_dir}/${NAME}-amd64.iso"
 
-download_file "${base_url}/harvester-${VERSION}-amd64.sha512" \
-    "${ts_dir}/harvester-${VERSION}-amd64.sha512"
+download_file "${base_url}/${NAME}-amd64.sha512" \
+    "${ts_dir}/${NAME}-amd64.sha512"
 
-download_file "${base_url}/harvester-${VERSION}-initrd-amd64" \
-    "${ts_dir}/harvester-${VERSION}-initrd-amd64"
+download_file "${base_url}/${NAME}-initrd-amd64" \
+    "${ts_dir}/${NAME}-initrd-amd64"
 
-download_file "${base_url}/harvester-${VERSION}-vmlinuz-amd64" \
-    "${ts_dir}/harvester-${VERSION}-vmlinuz-amd64"
+download_file "${base_url}/${NAME}-vmlinuz-amd64" \
+    "${ts_dir}/${NAME}-vmlinuz-amd64"
 
-download_file "${base_url}/harvester-${VERSION}-rootfs-amd64.squashfs" \
-    "${ts_dir}/harvester-${VERSION}-rootfs-amd64.squashfs"
+download_file "${base_url}/${NAME}-rootfs-amd64.squashfs" \
+    "${ts_dir}/${NAME}-rootfs-amd64.squashfs"
 
 
 echo "Validating checksum..." >&2
-filtered_sha512="${ts_dir}/harvester-${VERSION}-amd64.sha512.filtered"
-grep -v "net-install.iso" "${ts_dir}/harvester-${VERSION}-amd64.sha512" > "$filtered_sha512"
+filtered_sha512="${ts_dir}/${NAME}-amd64.sha512.filtered"
+grep -v "net-install.iso" "${ts_dir}/${NAME}-amd64.sha512" > "$filtered_sha512"
 pushd "$ts_dir" > /dev/null
 if sha512sum -c "$filtered_sha512" 2>/dev/null; then
     echo "Checksum validation passed." >&2

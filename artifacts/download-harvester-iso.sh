@@ -1,4 +1,14 @@
 #!/bin/bash -eu
+#
+# Download Harvester release artifacts for VERSION (default: master) from
+# harvester_release_url, mirroring the release server layout:
+#
+#   <harvester_release_url>/<VERSION>/<prefix>-<VERSION>-*
+#     -> artifacts/isos/<prefix>/<VERSION>/<prefix>-<VERSION>-*
+#
+# <prefix> is harvester_release_prefix (default: harvester).
+#
+# Usage: download-harvester-iso.sh [VERSION]
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -7,7 +17,7 @@ BASE_URL=$(yq -e '.harvester_release_url' "$CONFIG_FILE")
 RELEASE_PREFIX=$(yq -e '.harvester_release_prefix // "harvester"' "$CONFIG_FILE")
 
 # Configuration
-DOWNLOADS_DIR="$SCRIPT_DIR/isos"
+DOWNLOADS_DIR="$SCRIPT_DIR/isos/$RELEASE_PREFIX"
 
 # Get version from argument or use default
 VERSION="${1:-master}"
@@ -22,7 +32,7 @@ create_downloads_dir() {
 
 # Function 2: Check and create version directory
 check_version_dir() {
-    local version_dir="$DOWNLOADS_DIR/${RELEASE_PREFIX}-$VERSION"
+    local version_dir="$DOWNLOADS_DIR/$VERSION"
 
     # If version is master, always remove the directory to get fresh files
     if [ "$VERSION" = "master" ] && [ -d "$version_dir" ]; then
@@ -56,7 +66,7 @@ download_file() {
 
 # Function 4: Download all required files
 download_all_files() {
-    local version_dir="$DOWNLOADS_DIR/${RELEASE_PREFIX}-$VERSION"
+    local version_dir="$DOWNLOADS_DIR/$VERSION"
     local base_url="$BASE_URL/$VERSION"
 
     download_file "${base_url}/${RELEASE_PREFIX}-${VERSION}-amd64.iso" \
@@ -80,7 +90,7 @@ download_all_files() {
 
 # Function 5: Validate checksum
 validate_checksum() {
-    local version_dir="$DOWNLOADS_DIR/${RELEASE_PREFIX}-$VERSION"
+    local version_dir="$DOWNLOADS_DIR/$VERSION"
     local checked_file="checked"
     local filtered_sha512_file="${RELEASE_PREFIX}-${VERSION}-amd64.sha512.filtered"
 

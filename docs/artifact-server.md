@@ -23,6 +23,36 @@ node VMs reach it at `artifact_server_url` (default `http://10.0.10.1:8787`).
 
 Directory listing is enabled, so you can browse them in a web browser.
 
+Downloaded Harvester releases use the same layout as the release server
+(`harvester_release_url`), with one directory per `harvester_release_prefix`:
+
+```
+artifacts/isos/
+├── harvester/                 # served as <artifact_server_url>/isos/harvester
+│   ├── master/
+│   │   ├── harvester-master-amd64.iso
+│   │   ├── harvester-master-amd64.sha512
+│   │   ├── harvester-master-initrd-amd64
+│   │   ├── harvester-master-vmlinuz-amd64
+│   │   ├── harvester-master-rootfs-amd64.squashfs
+│   │   ├── version.yaml
+│   │   └── checked            # written after the checksum passes
+│   ├── v1.8.1/...
+│   └── dev/harvester-dev-*    # local builds (extra: task cp-harvester-iso)
+├── suse-virtualization/
+│   └── v1.8.1/suse-virtualization-v1.8.1-*
+└── golden/<version>/<timestamp>/...   # download-golden-iso.sh
+```
+
+- `artifacts/download-harvester-iso.sh VERSION` downloads into
+  `<prefix>/<VERSION>/`.
+- `task select-install-iso -- VERSION` and `task select-upgrade-iso -- VERSION`
+  list the versions under the configured prefix and set `config.yaml` to
+  `<artifact_server_url>/isos/<prefix>/<VERSION>/<prefix>-<VERSION>-*`.
+  `harvester_version` is set to the bare `VERSION`.
+- `artifacts/migrate-isos-layout.sh` moves downloads from the old
+  `<prefix>-<version>/` directories.
+
 ## Proxy
 
 The server can also fetch a file from another HTTP(S) server and pass it on.

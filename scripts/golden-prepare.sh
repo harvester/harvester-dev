@@ -13,6 +13,8 @@ TOP_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd )"
 source "$TOP_DIR/op/lib.sh"
 source "$TOP_DIR/op/config.sh"
 GOLDEN_DIR=$(golden_dir "$VERSION")
+RELEASE_PREFIX=$(yq -e '.harvester_release_prefix // "harvester"' "$TOP_DIR/config.yaml")
+NAME="${RELEASE_PREFIX}-${VERSION}"
 REMOTE_TIMESTAMP_URL="${ARTIFACT_SERVER_URL}/${VERSION}/latest"
 
 is_valid() {
@@ -61,10 +63,10 @@ golden_create() {
 
     local base="${ARTIFACT_SERVER_URL}/${VERSION}/${remote_timestamp}"
     yq e -i "
-        .harvester_iso_url    = \"${base}/harvester-${VERSION}-amd64.iso\" |
-        .harvester_kernel_url = \"${base}/harvester-${VERSION}-vmlinuz-amd64\" |
-        .harvester_ramdisk_url = \"${base}/harvester-${VERSION}-initrd-amd64\" |
-        .harvester_rootfs_url = \"${base}/harvester-${VERSION}-rootfs-amd64.squashfs\"
+        .harvester_iso_url    = \"${base}/${NAME}-amd64.iso\" |
+        .harvester_kernel_url = \"${base}/${NAME}-vmlinuz-amd64\" |
+        .harvester_ramdisk_url = \"${base}/${NAME}-initrd-amd64\" |
+        .harvester_rootfs_url = \"${base}/${NAME}-rootfs-amd64.squashfs\"
     " "${TOP_DIR}/config.yaml"
     echo "Updated config.yaml with remote base: ${base}"
 

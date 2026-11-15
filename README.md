@@ -186,15 +186,24 @@ Download a Harvester ISO:
 ./artifacts/download-harvester-iso.sh v1.8.1    # specific release
 ```
 
+Files are saved with the same layout as the release server, under a
+directory per prefix: `artifacts/isos/<prefix>/<version>/<prefix>-<version>-*`.
+
 For SUSE Virtualization, set `harvester_release_url` to your release server
 and `harvester_release_prefix: suse-virtualization` in `config.yaml`, then run
-`./artifacts/download-harvester-iso.sh <versin>`.
+`./artifacts/download-harvester-iso.sh <version>`.
 
-Select the ISO to use:
+Select the ISO to use (versions downloaded for `harvester_release_prefix`):
 
 ```bash
-./artifacts/select-install-iso.sh
+./artifacts/select-install-iso.sh           # pick from a list
+./artifacts/select-install-iso.sh v1.8.1    # specific version
 ```
+
+> [!NOTE]
+> Downloads made before this layout lived in `artifacts/isos/<prefix>-<version>/`.
+> Move them with `./artifacts/migrate-isos-layout.sh` (add `--dry-run` to preview),
+> then run the select scripts again.
 
 Edit `config.yaml` as needed (node count, CPU, memory), then start the cluster:
 
