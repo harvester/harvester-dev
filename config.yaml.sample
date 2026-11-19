@@ -12,11 +12,11 @@ harvester_release_url: https://releases.rancher.com/harvester
 # Filename and directory prefix: harvester (default) or suse-virtualization.
 harvester_release_prefix: harvester
 artifact_server_url: http://10.0.10.1:8787
-harvester_version: harvester-master
-harvester_iso_url: http://10.0.10.1:8787/isos/harvester-master/harvester-master-amd64.iso
-harvester_kernel_url: http://10.0.10.1:8787/isos/harvester-master/harvester-master-vmlinuz-amd64
-harvester_ramdisk_url: http://10.0.10.1:8787/isos/harvester-master/harvester-master-initrd-amd64
-harvester_rootfs_url: http://10.0.10.1:8787/isos/harvester-master/harvester-master-rootfs-amd64.squashfs
+harvester_version: master
+harvester_iso_url: http://10.0.10.1:8787/isos/harvester/master/harvester-master-amd64.iso
+harvester_kernel_url: http://10.0.10.1:8787/isos/harvester/master/harvester-master-vmlinuz-amd64
+harvester_ramdisk_url: http://10.0.10.1:8787/isos/harvester/master/harvester-master-initrd-amd64
+harvester_rootfs_url: http://10.0.10.1:8787/isos/harvester/master/harvester-master-rootfs-amd64.squashfs
 ##############################################################################
 # Golden image configuration
 ##############################################################################
