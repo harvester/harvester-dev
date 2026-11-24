@@ -65,6 +65,11 @@ locals {
     : abspath("${local.project_dir}/${local.config.rancher.image_url}")
   )
 
+  # Upload the ISO into the default pool instead of attaching the file
+  # directly, so qemu does not need access to the file's directory
+  iso_boot_use_pool = try(local.config.iso_boot.use_pool, false) == true && try(local.config.iso_boot.count, 0) > 0
+  iso_boot_file     = try(local.config.iso_boot.file, "")
+
   # Transform iso_boot config into a map with index as key for for_each
   iso_nodes = {
     for idx in range(try(local.config.iso_boot.count, 0)) : idx => {

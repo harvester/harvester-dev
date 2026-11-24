@@ -293,6 +293,9 @@ tests:
 ##############################################################################
 iso_boot:
   file: /path/to/install.iso
+  # Copy the ISO into the default pool if qemu can't read its path.
+  # Each copy writes the full ISO to disk.
+  use_pool: false
   count: 0
   cpu: 8
   vnc_port_start: 5961

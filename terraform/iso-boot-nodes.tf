@@ -18,6 +18,57 @@ resource "libvirt_volume" "iso_node_data_disk" {
   }
 }
 
+# Size and mtime of the ISO file, so a rebuilt ISO at the same path
+# replaces the pool copy. Hashing the file would read it on every plan.
+data "external" "iso_boot_file_stat" {
+  count = local.iso_boot_use_pool ? 1 : 0
+
+  program = ["sh", "-c", <<-EOT
+    st=$(stat -L -c '%s-%Y' "$1") || exit 1
+    echo "{\"stat\":\"$st\"}"
+  EOT
+    , "sh", local.iso_boot_file
+  ]
+}
+
+resource "terraform_data" "iso_boot_file_stat" {
+  count = local.iso_boot_use_pool ? 1 : 0
+
+  input = data.external.iso_boot_file_stat[0].result.stat
+}
+
+# Copy of the ISO in the default pool, shared read-only by all iso_boot
+# nodes (iso_boot.use_pool)
+resource "libvirt_volume" "iso_boot_cdrom" {
+  count = local.iso_boot_use_pool ? 1 : 0
+
+  name = "${local.prefix}-iso-boot.iso"
+  pool = "default"
+
+  target = {
+    # libvirt detects ISO 9660 content as "iso"; "raw" makes the
+    # provider report an inconsistent result after upload
+    format = {
+      type = "iso"
+    }
+    permissions = {
+      owner = data.external.qemu_ids.result.uid != "" ? data.external.qemu_ids.result.uid : null
+      group = data.external.qemu_ids.result.gid != "" ? data.external.qemu_ids.result.gid : null
+      mode  = "0644"
+    }
+  }
+
+  create = {
+    content = {
+      url = local.iso_boot_file
+    }
+  }
+
+  lifecycle {
+    replace_triggered_by = [terraform_data.iso_boot_file_stat[0]]
+  }
+}
+
 # Create libvirt domains for iso_boot nodes (boot from ISO)
 resource "libvirt_domain" "iso_node" {
   for_each = local.iso_nodes
@@ -72,9 +123,13 @@ resource "libvirt_domain" "iso_node" {
           type = "raw"
         }
         source = {
-          file = {
+          file = local.iso_boot_use_pool ? null : {
             file = each.value.iso_file
           }
+          volume = local.iso_boot_use_pool ? {
+            pool   = "default"
+            volume = libvirt_volume.iso_boot_cdrom[0].name
+          } : null
         }
         target = {
           dev      = "sda"

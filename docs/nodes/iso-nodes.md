@@ -1,11 +1,12 @@
 # Create a VM node and boot from an ISO
 
-* Prepare the ISO and place it on the host (e.g. `/tmp/harvester.iso`). The `qemu` user must be able to read the file.
+* Prepare the ISO and place it on the host (e.g. `/tmp/harvester.iso`). The `qemu` user must be able to read the file and its directories.
 * Edit `config.yaml`. Only `file` and `count` are required; everything else has sensible defaults.
 
   ```yaml
   iso_boot:
     file: /tmp/harvester.iso
+    use_pool: false
     count: 1
     cpu: 8
     memory: 16
@@ -14,6 +15,8 @@
       - 500G
       - 500G
   ```
+
+* Set `use_pool: true` if `qemu` can't read the ISO's path (e.g. a `0700` home directory). The ISO is copied into the libvirt `default` pool, and copied again by `task admin-up` when the file changes. Each copy writes the full ISO to disk.
 
 * Provision infrastructure and boot the admin node:
 
