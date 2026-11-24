@@ -34,6 +34,12 @@
   task op:iso-boot-nodes-start
   ```
 
+* To wipe the data disks and boot the ISO nodes into the installer again, without rebuilding the infra or copying the ISO again:
+
+  ```bash
+  task op:iso-boot-nodes-reinstall
+  ```
+
 The VMs boot from their attached ISO first, then fall back to the data disks. Connect to the console via VNC — port for node `N` is `5960 + N`. The admin node runs an internal DHCP server so you can use DHCP during installation.
 
 > **Note:** You may need to open the VNC ports in your firewall (e.g. `5961`, `5962`, …).
