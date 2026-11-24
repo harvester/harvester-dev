@@ -224,6 +224,13 @@ tasks:
     desc: Destroy all ISO nodes domains in libvirt
     cmds:
       - ./iso-nodes/libvirt-domain-op.sh destroy
+  iso-boot-nodes-reinstall:
+    desc: Reset ISO node data disks and boot them from the ISO again
+    cmds:
+      - ./confirm-op.sh
+      - task: iso-boot-nodes-destroy
+      - ./iso-nodes/reset-disks.sh
+      - task: iso-boot-nodes-start
 
 # Harvester related tasks
   harvester-init-tf:
